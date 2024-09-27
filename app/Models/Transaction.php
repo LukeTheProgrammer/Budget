@@ -11,6 +11,11 @@ class Transaction extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'transaction_date' => 'date',
+        'post_date' => 'date',
+    ];
+
     // $table->string('hash')->nullable();
     // $table->dateTime('transaction_date')->nullable();
     // $table->dateTime('post_date')->nullable();

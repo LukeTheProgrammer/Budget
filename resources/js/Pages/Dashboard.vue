@@ -1,7 +1,8 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import AppLayout from '@/Layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
+import { parse, format } from '@formkit/tempo'
 
 const props = defineProps({
   transactions: {
@@ -14,12 +15,14 @@ const thead = ref(['Date', 'Description', 'Type', 'Amount'])
 
 const tbody = computed(() => {
     return props.transactions.map(t => {
-    return [
-      t.transaction_date,
-      t.description,
-      t.type,
-      t.amount
-    ]
+        const transDate = parse(t.transaction_date)
+
+        return [
+            format(transDate, 'YYYY-MM-DD'),
+            t.description,
+            t.type,
+            t.amount
+        ]
   })
 })
 </script>
@@ -27,38 +30,28 @@ const tbody = computed(() => {
 <template>
     <Head title="Dashboard" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200"
-            >
-                Dashboard
-            </h2>
+            <h1>Dashboard</h1>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <table class="table w-100">
-                            <thead>
-                                <tr class="bg-primary">
-                                    <th v-for="(th, thi) in thead" :key="`th-${thi}`">
-                                        {{ th }}
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(row, rowi) in tbody" :key="`row-${rowi}`">
-                                    <td v-for="(cell, celli) in row" :key="`cell-${rowi}-${celli}`">
-                                        {{ cell }}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+        <div class="card p-4">
+            <table class="table table-hover">
+                <thead>
+                    <tr class="bg-primary">
+                        <th v-for="(th, thi) in thead" :key="`th-${thi}`">
+                            {{ th }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(row, rowi) in tbody" :key="`row-${rowi}`">
+                        <td v-for="(cell, celli) in row" :key="`cell-${rowi}-${celli}`">
+                            {{ cell }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </AuthenticatedLayout>
+    </AppLayout>
 </template>
