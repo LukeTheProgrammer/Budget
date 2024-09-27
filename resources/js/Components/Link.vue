@@ -13,11 +13,7 @@ const href = route(props.route);
 
 const active = route().current(props.route);
 
-const classes = computed(() =>
-    active
-        ? 'nav-link active'
-        : 'nav-link',
-);
+const classes = computed(() => active ? 'active' : '');
 </script>
 
 <template>

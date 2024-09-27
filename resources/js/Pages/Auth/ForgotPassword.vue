@@ -2,6 +2,8 @@
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import LoginCard from '@/Pages/Auth/LoginCard.vue';
+import Link from '@/Components/Link.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, useForm } from '@inertiajs/vue3';
@@ -25,44 +27,47 @@ const submit = () => {
     <GuestLayout>
         <Head title="Forgot Password" />
 
-        <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            Forgot your password? No problem. Just let us know your email
-            address and we will email you a password reset link that will allow
-            you to choose a new one.
-        </div>
+        <LoginCard>
 
-        <div
-            v-if="status"
-            class="mb-4 text-sm font-medium text-green-600 dark:text-green-400"
-        >
-            {{ status }}
-        </div>
-
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
+            <div class="">
+                Forgot your password? No problem. Just let us know your email
+                address and we will email you a password reset link that will allow
+                you to choose a new one.
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Email Password Reset Link
-                </PrimaryButton>
+            <div v-if="status" class="alert alert-success" role="alert">
+                {{ status }}
             </div>
-        </form>
+
+            <form @submit.prevent="submit">
+                <div class="mt-4">
+                    <div class="form-floating">
+                        <TextInput
+                            id="email"
+                            type="email"
+                            v-model="form.email"
+                            required
+                            autofocus
+                            autocomplete="username"
+                        />
+                        <InputLabel for="email" value="Email" />
+                    </div>
+
+                    <InputError class="mt-2" :message="form.errors.email" />
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-primary w-100" :disabled="form.processing">
+                        Email Password Reset Link
+                    </button>
+                </div>
+
+                <div class="mt-4">
+                    <Link route="login">
+                        Login
+                    </Link>
+                </div>
+            </form>
+        </LoginCard>
     </GuestLayout>
 </template>
