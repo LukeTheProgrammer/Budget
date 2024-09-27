@@ -8,7 +8,7 @@ const showingNavigationDropdown = ref(false);
 <template>
     <div>
         <nav class="navbar navbar-expand-sm bg-dark border-bottom border-body" data-bs-theme="dark">
-            <div class="container-fluid">
+            <div class="container">
                 <a class="navbar-brand" href="/">Budget</a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -21,15 +21,11 @@ const showingNavigationDropdown = ref(false);
                                 Dashboard
                             </Link>
                         </li>
-                        <!-- <li class="nav-item">
-                            <a class="nav-link" href="#">Features</a>
-                        </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Pricing</a>
+                            <Link :href="route('reports')" class="nav-link">
+                                Reports
+                            </Link>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link disabled" aria-disabled="true">Disabled</a>
-                        </li> -->
                     </ul>
                 </div>
             </div>
