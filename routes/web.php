@@ -26,7 +26,8 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
-    Route::get('/reports', ReportsController::class)->name('reports');
+    Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+    Route::get('/reports/data', [ReportsController::class, 'getData'])->name('reports.data');
 });
 
 require __DIR__.'/auth.php';

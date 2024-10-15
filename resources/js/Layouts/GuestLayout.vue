@@ -14,8 +14,11 @@ import { Link } from '@inertiajs/vue3';
 </template>
 
 <style>
-body {
+body main .container-fluid {
     background-image: url("https://laravel.com/assets/img/welcome/background.svg");
     background-size: cover;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
 }
 </style>
