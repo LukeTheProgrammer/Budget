@@ -19,7 +19,7 @@ const tbody = computed(() => {
 
         return [
             format(transDate, 'YYYY-MM-DD'),
-            t.description,
+            t.vendor.name,
             t.type,
             t.amount
         ]

@@ -14,7 +14,7 @@ class DashboardController extends Controller
     public function __invoke()
     {
         return Inertia::render('Dashboard', [
-            'transactions' => Transaction::all(),
+            'transactions' => Transaction::query()->with(['vendor'])->get(),
         ]);
     }
 }
