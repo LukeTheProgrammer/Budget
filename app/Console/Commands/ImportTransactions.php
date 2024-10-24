@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Facades\Action;
 use App\Models\Transaction;
+use App\Models\Vendor;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use function Laravel\Prompts\select;
@@ -94,11 +95,15 @@ class ImportTransactions extends Command
             $row['Amount'],
         ]));
 
+        $vendor = Vendor::firstOrCreate([
+            'name' => $row['Description'],
+        ]);
+
         return [
+            'vendor_id' => $vendor->id,
             'hash' => $hash,
             'transaction_date' => Carbon::parse($row['Transaction Date']),
             'post_date' => Carbon::parse($row['Post Date']),
-            'description' => $row['Description'],
             'category' => $row['Category'],
             'type' => $row['Type'],
             'amount' => floatval($row['Amount']),
