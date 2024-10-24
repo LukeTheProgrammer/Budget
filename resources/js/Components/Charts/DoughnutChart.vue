@@ -1,10 +1,31 @@
 <script setup>
-import { Bar } from 'vue-chartjs'
-import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, Colors } from 'chart.js'
+import { Doughnut } from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Colors,
+} from 'chart.js'
 import autocolors from 'chartjs-plugin-autocolors'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, Colors, autocolors, ChartDataLabels)
+ChartJS.register(
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Colors,
+  autocolors,
+  ChartDataLabels,
+)
 
 const props = defineProps({
   chartData: {
@@ -23,6 +44,6 @@ const props = defineProps({
 
 <template>
   <div>
-    <Bar id="my-chart-id" :options="chartOptions" :data="chartData" />
+    <Doughnut id="my-chart-id" :options="chartOptions" :data="chartData" />
   </div>
 </template>
