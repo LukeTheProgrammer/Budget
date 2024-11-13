@@ -95,9 +95,7 @@ class ImportTransactions extends Command
             $row['Amount'],
         ]));
 
-        $vendor = Vendor::firstOrCreate([
-            'name' => $row['Description'],
-        ]);
+        $vendor = Action::resolveVendor($row['Description']);
 
         return [
             'vendor_id' => $vendor->id,

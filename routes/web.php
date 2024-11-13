@@ -3,20 +3,12 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\VendorController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::redirect('/', '/login');
-
-// Route::get('/', function () {
-//     return Inertia::render('Welcome', [
-//         'canLogin' => Route::has('login'),
-//         'canRegister' => Route::has('register'),
-//         'laravelVersion' => Application::VERSION,
-//         'phpVersion' => PHP_VERSION,
-//     ]);
-// });
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -28,6 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
     Route::get('/reports/data', [ReportsController::class, 'getData'])->name('reports.data');
+    Route::get('/vendors', [VendorController::class, 'index'])->name('vendors');
 });
 
 require __DIR__.'/auth.php';

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
 use App\Models\Vendor;
+use Inertia\Inertia;
 
 class VendorController extends Controller
 {
@@ -13,7 +14,9 @@ class VendorController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Vendors', [
+            'vendors' => Vendor::query()->orderBy('name')->get(),
+        ]);
     }
 
     /**

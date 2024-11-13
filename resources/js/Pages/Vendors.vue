@@ -1,56 +1,52 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
-import SideDrawer from '@/Components/SideDrawer.vue'
 import { Head } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import { parse, format } from '@formkit/tempo'
 
 const props = defineProps({
-  transactions: {
-    type: Array,
-    default: () => [],
-  },
   vendors: {
     type: Array,
     default: () => [],
   },
 })
 
-const thead = ref(['Date', 'Description', 'Type', 'Amount'])
+const searchTerm = ref(null);
+
+const thead = ref(['Name'])
 
 const tbody = computed(() => {
-  return props.transactions.map((t) => {
-    const transDate = parse(t.transaction_date)
+  const searchStr = searchTerm.value?.toLowerCase() ?? ''
 
-    return [format(transDate, 'YYYY-MM-DD'), t.vendor.name, t.type, t.amount]
-  })
+  return props.vendors
+    .filter((v) => {
+      if (!searchTerm.value) {
+        return true;
+      }
+
+      const name = v.name?.toLowerCase()?.replaceAll(/[^a-z]/g, '') ?? ''
+
+      return name?.length && name.includes(searchStr)
+    })
+    .map((v) => {
+      // const transDate = parse(t.transaction_date)
+      // return [format(transDate, 'YYYY-MM-DD'), t.vendor.name, t.type, t.amount]
+
+      return [v.name]
+    })
 })
 </script>
 
 <template>
-  <Head title="Dashboard" />
+  <Head title="Vendors" />
 
   <AppLayout>
     <template #header>
-      <h1>Dashboard</h1>
+      <h1>Vendors</h1>
     </template>
 
     <div class="card p-4">
-      <div class="row">
-        <div class="col-3">
-          <div class="form-floating">
-            <select class="form-select" id="vendor">
-              <option v-for="v in props.vendors" :key="v.id" :value="v.id">
-                {{ v.name }}
-              </option>
-            </select>
-            <label for="vendor">Vendors</label>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card p-4">
+      <input type="text" class="form-control" placeholder="Search" v-model="searchTerm" />
       <table class="table table-hover">
         <thead>
           <tr class="bg-primary">
