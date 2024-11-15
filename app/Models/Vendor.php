@@ -16,4 +16,9 @@ class Vendor extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    public function aliases(): HasMany
+    {
+        return $this->hasMany(VendorAlias::class);
+    }
 }

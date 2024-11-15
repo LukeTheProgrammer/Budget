@@ -15,7 +15,10 @@ class VendorController extends Controller
     public function index()
     {
         return Inertia::render('Vendors', [
-            'vendors' => Vendor::query()->orderBy('name')->get(),
+            'vendors' => Vendor::query()
+                ->with(['aliases'])
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 

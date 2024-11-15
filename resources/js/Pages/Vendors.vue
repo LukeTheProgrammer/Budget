@@ -1,8 +1,10 @@
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
-import { parse, format } from '@formkit/tempo'
+import { computed, ref, useTemplateRef } from 'vue'
+import AppLayout from '@/Layouts/AppLayout.vue'
+import AgGridTable from '@/Components/Tables/AgGridTable.vue'
+import AgGridCellButton from '@/Components/Tables/Partials/AgGridCellButton.vue'
+import VendorModal from '@/Components/Modals/VendorModal.vue'
 
 const props = defineProps({
   vendors: {
@@ -11,29 +13,44 @@ const props = defineProps({
   },
 })
 
-const searchTerm = ref(null);
+const modalRef = useTemplateRef('vendorModal')
+const vendorModalId = ref(null)
 
-const thead = ref(['Name'])
+const vendorBtnClick = (params) => {
+  vendorModalId.value = JSON.stringify(params.data)
+  modalRef.value.showModal()
+}
 
-const tbody = computed(() => {
-  const searchStr = searchTerm.value?.toLowerCase() ?? ''
-
-  return props.vendors
-    .filter((v) => {
-      if (!searchTerm.value) {
-        return true;
+const colDefs = ref([
+  { field: 'name', headerName: 'Vendor Name', cellClass: ['align-middle'] },
+  { field: 'aliases', headerName: 'Aliases', cellClass: ['align-middle'] },
+  {
+    field: 'id',
+    headerName: '',
+    cellClass: ['align-middle', 'text-end'],
+    cellRendererSelector: (params) => {
+      return {
+        component: AgGridCellButton,
+        params: {
+          label: 'Vendor',
+          handleClick: function (params) {
+            vendorBtnClick(params)
+          },
+        },
       }
+    },
+  },
+])
 
-      const name = v.name?.toLowerCase()?.replaceAll(/[^a-z]/g, '') ?? ''
-
-      return name?.length && name.includes(searchStr)
-    })
-    .map((v) => {
-      // const transDate = parse(t.transaction_date)
-      // return [format(transDate, 'YYYY-MM-DD'), t.vendor.name, t.type, t.amount]
-
-      return [v.name]
-    })
+const rowData = computed(() => {
+  return props.vendors.map((v) => {
+    const aliases = v?.aliases?.map((a) => a.name)
+    return {
+      id: v.id,
+      name: v.name,
+      aliases: aliases?.join(', '),
+    }
+  })
 })
 </script>
 
@@ -45,24 +62,9 @@ const tbody = computed(() => {
       <h1>Vendors</h1>
     </template>
 
-    <div class="card p-4">
-      <input type="text" class="form-control" placeholder="Search" v-model="searchTerm" />
-      <table class="table table-hover">
-        <thead>
-          <tr class="bg-primary">
-            <th v-for="(th, thi) in thead" :key="`th-${thi}`">
-              {{ th }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, rowi) in tbody" :key="`row-${rowi}`">
-            <td v-for="(cell, celli) in row" :key="`cell-${rowi}-${celli}`">
-              {{ cell }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div style="height: 50vh">
+      <AgGridTable :col-defs="colDefs" :row-data="rowData" simple-filter-label="Search Vendors" />
+      <VendorModal :vendor-id="vendorModalId" ref="vendorModal" />
     </div>
   </AppLayout>
 </template>
