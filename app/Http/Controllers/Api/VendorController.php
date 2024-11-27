@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
 use App\Models\Vendor;
 use App\Models\VendorAlias;
+use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 
 class VendorController extends Controller
@@ -15,12 +16,9 @@ class VendorController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Vendors', [
-            'vendors' => Vendor::query()
-                ->with(['aliases'])
-                ->orderBy('name')
-                ->get(),
-        ]);
+        return response()->json(
+            Vendor::query()->with(['aliases'])->orderBy('name')->get()
+        );
     }
 
     /**
@@ -44,9 +42,7 @@ class VendorController extends Controller
      */
     public function show(Vendor $vendor)
     {
-        return response()->json([
-            'vendor' => $vendor->load('aliases'),
-        ]);
+        return response()->json($vendor->load('aliases'));
     }
 
     /**
@@ -62,7 +58,9 @@ class VendorController extends Controller
      */
     public function update(UpdateVendorRequest $request, Vendor $vendor)
     {
-        //
+        $vendor->update($request->validated());
+
+        return response()->json($vendor->refresh());
     }
 
     /**

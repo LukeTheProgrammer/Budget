@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, useTemplateRef } from 'vue'
 import { Modal } from 'bootstrap'
 
 const props = defineProps({
@@ -9,13 +9,9 @@ const props = defineProps({
   },
 })
 
-onMounted(async () => {
-  modal.value = new Modal('#' + modalId, {
-    backdrop: true,
-    focus: true,
-    keyboard: true,
-  })
-})
+const emit = defineEmits(['closed'])
+
+const modalRef = useTemplateRef('theModal')
 
 const modalId = Math.random().toString(36).substr(2, 9)
 
@@ -27,10 +23,20 @@ defineExpose({
   showModal,
   hideModal,
 })
+
+onMounted(() => {
+  modal.value = new Modal('#' + modalId, {
+    backdrop: true,
+    focus: true,
+    keyboard: true,
+  })
+
+  modalRef.value.addEventListener('hidden.bs.modal', () => emit('closed'))
+})
 </script>
 
 <template>
-  <div class="modal fade" :id="modalId" tabindex="-1" aria-labelledby="bsModalTitle" aria-hidden="true">
+  <div class="modal fade" :id="modalId" ref="theModal" tabindex="-1" aria-labelledby="bsModalTitle" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">

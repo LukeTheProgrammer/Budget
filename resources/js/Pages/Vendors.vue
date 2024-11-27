@@ -1,6 +1,6 @@
 <script setup>
 import { Head } from '@inertiajs/vue3'
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import AgGridTable from '@/Components/Tables/AgGridTable.vue'
 import AgGridCellButton from '@/Components/Tables/Partials/AgGridCellButton.vue'
@@ -17,8 +17,12 @@ const modalRef = useTemplateRef('vendorModal')
 const vendorModalId = ref(null)
 
 const vendorBtnClick = (params) => {
-  vendorModalId.value = JSON.stringify(params.data)
-  modalRef.value.showModal()
+  vendorModalId.value = params.data.id
+  nextTick(() => modalRef.value.showModal())
+}
+
+const onVendorModalClosed = () => {
+  vendorModalId.value = null
 }
 
 const colDefs = ref([
@@ -64,7 +68,7 @@ const rowData = computed(() => {
 
     <div style="height: 50vh">
       <AgGridTable :col-defs="colDefs" :row-data="rowData" simple-filter-label="Search Vendors" />
-      <VendorModal :vendor-id="vendorModalId" ref="vendorModal" />
+      <VendorModal v-if="vendorModalId" :vendor-id="vendorModalId" ref="vendorModal" @closed="onVendorModalClosed" />
     </div>
   </AppLayout>
 </template>

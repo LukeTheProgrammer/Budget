@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateVendorRequest extends FormRequest
+class UpdateVendorAliasRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,6 +22,7 @@ class UpdateVendorRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'vendor_id' => ['sometimes', 'nullable', 'exists:vendors.id'],
             'name' => ['sometimes', 'string', 'min:1'],
         ];
     }

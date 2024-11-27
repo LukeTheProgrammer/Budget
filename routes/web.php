@@ -4,9 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VendorController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::redirect('/', '/login');
 
@@ -23,4 +21,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vendors', [VendorController::class, 'index'])->name('vendors');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
