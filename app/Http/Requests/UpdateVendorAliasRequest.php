@@ -22,7 +22,7 @@ class UpdateVendorAliasRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'vendor_id' => ['sometimes', 'nullable', 'exists:vendors.id'],
+            'vendor_id' => ['sometimes', 'nullable', 'exists:vendors,id'],
             'name' => ['sometimes', 'string', 'min:1'],
         ];
     }

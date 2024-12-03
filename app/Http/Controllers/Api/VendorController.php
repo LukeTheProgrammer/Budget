@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
+use App\Http\Resources\VendorEditResource;
 use App\Models\Vendor;
 use App\Models\VendorAlias;
 use App\Http\Controllers\Controller;
@@ -50,7 +51,9 @@ class VendorController extends Controller
      */
     public function edit(Vendor $vendor)
     {
-        //
+        return response()->json(
+            new VendorEditResource($vendor)
+        );
     }
 
     /**

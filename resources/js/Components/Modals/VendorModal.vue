@@ -11,19 +11,32 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['closed', 'saving', 'saved'])
+const emit = defineEmits(['closed', 'saving', 'saved', 'deleting', 'deleted'])
 
 const modalRef = useTemplateRef('vendorBsModal')
 const formRef = useTemplateRef('vendorForm')
 
+const saving = ref(false)
+const deleting = ref(false)
+
 const showModal = () => modalRef.value.showModal()
 const hideModal = () => modalRef.value.hideModal()
 
+const deleteVendor = () => formRef.value.deleteVendor()
 const submitForm = () => formRef.value.submitForm()
 
 const emitClosed = () => emit('closed')
 
-const saving = ref(false)
+const onDeleting = () => {
+  deleting.value = true
+  emit('deleting')
+}
+
+const onDeleted = () => {
+  deleting.value = false
+  emit('deleted')
+  hideModal()
+}
 
 const onSaving = () => {
   saving.value = true
@@ -33,7 +46,7 @@ const onSaving = () => {
 const onSaved = () => {
   saving.value = false
   emit('saved')
-  setTimeout(() => hideModal(), 500)
+  hideModal()
 }
 
 defineExpose({
@@ -45,8 +58,20 @@ defineExpose({
 <template>
   <div>
     <BsModal ref="vendorBsModal" title="Vendor" @closed="emitClosed">
-      <VendorForm ref="vendorForm" :vendor-id="props.vendorId" @saving="onSaving" @saved="onSaved" />
+      <VendorForm
+        ref="vendorForm"
+        :vendor-id="props.vendorId"
+        @deleting="onDeleting"
+        @deleted="onDeleted"
+        @saving="onSaving"
+        @saved="onSaved"
+      />
       <template #footer>
+        <button type="button" class="btn btn-danger" @click.prevent="deleteVendor">
+          <LoadingSpinner v-if="saving" :small="true" />
+          <span v-else>Submit</span>
+          Delete
+        </button>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-primary" @click.prevent="submitForm">
           <LoadingSpinner v-if="saving" :small="true" />
@@ -56,10 +81,3 @@ defineExpose({
     </BsModal>
   </div>
 </template>
-
-<style>
-.modal.show {
-  display: block;
-  background: rgba(0, 0, 0, 0.5);
-}
-</style>

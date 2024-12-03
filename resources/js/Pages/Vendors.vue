@@ -21,6 +21,8 @@ const vendorBtnClick = (params) => {
   nextTick(() => modalRef.value.showModal())
 }
 
+const reloadPage = () => location.reload()
+
 const onVendorModalClosed = () => {
   vendorModalId.value = null
 }
@@ -68,7 +70,14 @@ const rowData = computed(() => {
 
     <div style="height: 50vh">
       <AgGridTable :col-defs="colDefs" :row-data="rowData" simple-filter-label="Search Vendors" />
-      <VendorModal v-if="vendorModalId" :vendor-id="vendorModalId" ref="vendorModal" @closed="onVendorModalClosed" />
+      <VendorModal
+        v-if="vendorModalId"
+        :vendor-id="vendorModalId"
+        ref="vendorModal"
+        @closed="onVendorModalClosed"
+        @saved="reloadPage"
+        @deleted="reloadPage"
+      />
     </div>
   </AppLayout>
 </template>
