@@ -1,9 +1,5 @@
 <script setup>
-import { ref } from 'vue'
-import { Link } from '@inertiajs/vue3'
 import NavLink from '@/Components/NavLink.vue'
-
-const showingNavigationDropdown = ref(false)
 </script>
 
 <template>
@@ -34,6 +30,9 @@ const showingNavigationDropdown = ref(false)
             </li>
             <li class="nav-item">
               <NavLink route="vendors">Vendors</NavLink>
+            </li>
+            <li class="nav-item">
+              <NavLink route="vendor-aliases">Vendor Aliases</NavLink>
             </li>
           </ul>
 

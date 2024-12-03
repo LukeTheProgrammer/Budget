@@ -142,6 +142,13 @@ const submitForm = () => {
 
 const deleteVendor = () => {
   emit('deleting')
+
+  const url = `/api/vendors/${formData.value.id}`
+
+  axios.delete(url).then(
+    () => emit('deleted'),
+    (err) => console.error(err),
+  )
 }
 
 /* ====[ Vue stuff ]==== */
@@ -166,7 +173,6 @@ defineExpose({
         <p>Aliases</p>
         <div class="d-flex mb-3">
           <div class="flex-grow-1 me-3">
-            <!-- <label for="alias-search" class="form-label">Add Alias</label> -->
             <input
               v-model="newAlias"
               class="form-control"
@@ -176,7 +182,6 @@ defineExpose({
             />
             <datalist id="alias-datalist">
               <option v-for="(a, ai) in aliasOptions" :key="`allias-option-${ai}`" :value="a" />
-              <!-- <option v-for="a in aliasOptions" :key="`allias-option-${a.id}`" :value="a.id">{{ a.name }}</option> -->
             </datalist>
           </div>
           <div class="d-flex justify-content-end align-items-end">

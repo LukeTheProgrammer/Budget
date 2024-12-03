@@ -1,11 +1,11 @@
 <script setup>
 import { ref, useTemplateRef } from 'vue'
 import BsModal from './BsModal.vue'
-import VendorForm from '@/Components/Forms/VendorForm.vue'
+import VendorAliasForm from '@/Components/Forms/VendorAliasForm.vue'
 import LoadingSpinner from '@/Components/LoadingSpinner.vue'
 
 const props = defineProps({
-  vendorId: {
+  vendorAliasId: {
     type: [Number, String, null],
     default: null,
   },
@@ -14,7 +14,7 @@ const props = defineProps({
 const emit = defineEmits(['closed', 'saving', 'saved', 'deleting', 'deleted'])
 
 const modalRef = useTemplateRef('vendorBsModal')
-const formRef = useTemplateRef('vendorForm')
+const formRef = useTemplateRef('vendorAliasForm')
 
 const saving = ref(false)
 const deleting = ref(false)
@@ -22,7 +22,7 @@ const deleting = ref(false)
 const showModal = () => modalRef.value.showModal()
 const hideModal = () => modalRef.value.hideModal()
 
-const deleteVendor = () => formRef.value.deleteVendor()
+const deleteVendorAlias = () => formRef.value.deleteVendorAlias()
 const submitForm = () => formRef.value.submitForm()
 
 const emitClosed = () => emit('closed')
@@ -58,16 +58,16 @@ defineExpose({
 <template>
   <div>
     <BsModal ref="vendorBsModal" title="Vendor" @closed="emitClosed">
-      <VendorForm
-        ref="vendorForm"
-        :vendor-id="props.vendorId"
+      <VendorAliasForm
+        ref="vendorAliasForm"
+        :vendor-alias-id="props.vendorAliasId"
         @deleting="onDeleting"
         @deleted="onDeleted"
         @saving="onSaving"
         @saved="onSaved"
       />
       <template #footer>
-        <button type="button" class="btn btn-danger" @click.prevent="deleteVendor">
+        <button type="button" class="btn btn-danger" @click.prevent="deleteVendorAlias">
           <LoadingSpinner v-if="deleting" :small="true" />
           <span v-else>Delete</span>
         </button>

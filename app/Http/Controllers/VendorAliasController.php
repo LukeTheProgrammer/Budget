@@ -1,25 +1,26 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
-use App\Http\Resources\VendorEditResource;
 use App\Models\Vendor;
 use App\Models\VendorAlias;
-use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 
-class VendorController extends Controller
+class VendorAliasController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return response()->json(
-            Vendor::query()->with(['aliases'])->orderBy('name')->get()
-        );
+        return Inertia::render('VendorAliases', [
+            'vendorAliases' => VendorAlias::query()
+                ->with(['vendor'])
+                ->orderBy('name')
+                ->get(),
+        ]);
     }
 
     /**
@@ -41,38 +42,34 @@ class VendorController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Vendor $vendor)
+    public function show(VendorAlias $vendorAlias)
     {
-        return response()->json($vendor->load('aliases'));
+        return response()->json([
+            'vendorAlias' => $vendorAlias->load('vendor'),
+        ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Vendor $vendor)
+    public function edit(VendorAlias $vendorAlias)
     {
-        return response()->json(
-            new VendorEditResource($vendor)
-        );
+        //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateVendorRequest $request, Vendor $vendor)
+    public function update(UpdateVendorRequest $request, VendorAlias $vendorAlias)
     {
-        $vendor->update($request->validated());
-
-        return response()->json($vendor->refresh());
+        //
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Vendor $vendor)
+    public function destroy(VendorAlias $vendorAlias)
     {
-        $vendor->delete();
-
-        return response()->json();
+        //
     }
 }

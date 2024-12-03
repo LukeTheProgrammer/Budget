@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\VendorAliasController;
 use App\Http\Controllers\VendorController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
     Route::get('/reports/data', [ReportsController::class, 'getData'])->name('reports.data');
     Route::get('/vendors', [VendorController::class, 'index'])->name('vendors');
+    Route::get('/vendor-aliases', [VendorAliasController::class, 'index'])->name('vendor-aliases');
 });
 
 require __DIR__ . '/auth.php';

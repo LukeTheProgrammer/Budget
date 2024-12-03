@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\VendorAlias;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateVendorAliasRequest;
+use App\Http\Resources\VendorAliasEditResource;
 use Illuminate\Http\Request;
 
 class VendorAliasController extends Controller
@@ -46,7 +47,7 @@ class VendorAliasController extends Controller
      */
     public function edit(VendorAlias $vendorAlias)
     {
-        //
+        return response()->json(new VendorAliasEditResource($vendorAlias));
     }
 
     /**
