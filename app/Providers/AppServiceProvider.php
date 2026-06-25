@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
-use App\Services\Actions\Action;
-use Illuminate\Support\Facades\Vite;
+use App\Services\Plaid\PlaidConfig;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind('action', fn () => new Action());
+        $this->app->singleton(PlaidConfig::class, fn (): PlaidConfig => PlaidConfig::fromConfig());
     }
 
     /**
@@ -21,6 +24,28 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Vite::prefetch(concurrency: 3);
+        $this->configureDefaults();
+    }
+
+    /**
+     * Configure default behaviors for production-ready applications.
+     */
+    protected function configureDefaults(): void
+    {
+        Date::use(CarbonImmutable::class);
+
+        DB::prohibitDestructiveCommands(
+            app()->isProduction(),
+        );
+
+        Password::defaults(fn (): ?Password => app()->isProduction()
+            ? Password::min(12)
+                ->mixedCase()
+                ->letters()
+                ->numbers()
+                ->symbols()
+                ->uncompromised()
+            : null,
+        );
     }
 }
