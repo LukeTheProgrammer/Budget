@@ -3,13 +3,7 @@
 namespace App\Services\Transactions;
 
 use App\Models\Account;
-use App\Models\Category;
-use App\Models\Merchant;
-use App\Models\MerchantAlias;
-use App\Models\Transaction;
-use App\Services\Merchants\NameResolver;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use SplFileObject;
 use Throwable;
@@ -18,7 +12,9 @@ use Throwable;
  * Imports Chase-format transaction CSV files from the private storage disk into
  * the application's transactions table. This single service backs every entry
  * point (Artisan command, queued job, HTTP controller) so behavior is identical
- * regardless of how the import is triggered.
+ * regardless of how the import is triggered. Row persistence (merchant
+ * resolution, dedup, tagging) is delegated to the shared
+ * {@see TransactionRowStore} so it stays consistent with the mapped upload path.
  */
 class CsvTransactionImporter
 {
@@ -39,7 +35,7 @@ class CsvTransactionImporter
 
     private ?Account $account = null;
 
-    public function __construct(private NameResolver $nameResolver) {}
+    public function __construct(private TransactionRowStore $rowStore) {}
 
     /**
      * Import a single CSV file located relative to the `local` disk root
@@ -56,7 +52,7 @@ class CsvTransactionImporter
         $result = new ImportResult($relativePath);
 
         // Load the user's aliases and rules once for the whole file.
-        $this->nameResolver->forUser($account->user_id);
+        $this->rowStore->forUser($account->user_id);
 
         $file = $this->openFile($relativePath);
         $this->assertValidHeader($file, $relativePath);
@@ -75,7 +71,7 @@ class CsvTransactionImporter
 
             try {
                 $row = $this->parseRow($columns, $lineNumber);
-                $this->storeRow($account, $row, $result);
+                $this->rowStore->store($account, $this->normalize($account, $row), $result, $row->categoryName);
             } catch (Throwable $e) {
                 if ($stopOnFailure) {
                     throw new RowImportException($lineNumber, $columns, $e);
@@ -91,6 +87,22 @@ class CsvTransactionImporter
         $this->archiveFile($relativePath, $result);
 
         return $result;
+    }
+
+    /**
+     * Convert a parsed Chase row into the storage-engine's normalized row,
+     * applying the account currency.
+     */
+    private function normalize(Account $account, ChaseCsvRow $row): NormalizedTransactionRow
+    {
+        return new NormalizedTransactionRow(
+            lineNumber: $row->lineNumber,
+            postedAt: $row->postedAt,
+            description: $row->description,
+            merchantName: $row->merchantName,
+            amountCents: $row->amountCents,
+            currency: $account->currency,
+        );
     }
 
     /**
@@ -271,156 +283,6 @@ class CsvTransactionImporter
         }
 
         return $cents;
-    }
-
-    /**
-     * Persist one parsed row as a transaction, resolving/creating its merchant.
-     */
-    private function storeRow(Account $account, ChaseCsvRow $row, ImportResult $result): void
-    {
-        $merchant = $this->resolveMerchant($account->user_id, $row->merchantName, $row->categoryName, $result);
-
-        $importHash = hash(
-            'sha256',
-            implode('|', [
-                $account->id,
-                $row->postedAt->format('Y-m-d'),
-                $row->amountCents,
-                $merchant->id,
-            ]),
-        );
-
-        $transactionProps = [
-            'account_id' => $account->id,
-            'merchant_id' => $merchant->id,
-            'amount_cents' => $row->amountCents,
-            'currency' => $account->currency,
-            'description' => $row->description,
-            'posted_at' => $row->postedAt,
-            'import_hash' => $importHash,
-        ];
-
-        $transaction = Transaction::updateOrCreate(
-            ['import_hash' => $importHash],
-            $transactionProps
-        );
-
-        if ($transaction->wasRecentlyCreated) {
-            $this->applyDefaultTags($transaction, $merchant);
-            $result->incrementImported();
-        } else {
-            $result->incrementSkipped();
-        }
-    }
-
-    /**
-     * Apply the merchant's default tags to a freshly imported transaction. Only
-     * runs for newly created transactions (re-imported rows are left untouched),
-     * and is a no-op when the merchant has no default tags.
-     */
-    private function applyDefaultTags(Transaction $transaction, Merchant $merchant): void
-    {
-        $slugs = $merchant->defaultTags()->pluck('tags.slug')->all();
-
-        if ($slugs !== []) {
-            $transaction->tags()->syncWithoutDetaching($slugs);
-        }
-    }
-
-    /**
-     * Resolve the merchant for a raw statement descriptor. The DB-backed
-     * NameResolver (exact aliases + prefix/regex rules) is consulted first so
-     * known store variants collapse onto a single confirmed merchant. When it
-     * can't identify the name, fall back to an alias lookup that also catches
-     * merchants created earlier in this same run, and only then auto-create an
-     * unconfirmed merchant flagged for review.
-     */
-    private function resolveMerchant(int $userId, string $rawName, ?string $categoryName, ImportResult $result): Merchant
-    {
-        $merchant = $this->nameResolver->resolve($rawName);
-
-        if ($merchant !== null) {
-            return $this->backfillCategory($merchant, $categoryName);
-        }
-
-        // Resolver didn't know it. Catch repeats of unconfirmed merchants
-        // created earlier this run (the resolver's cache predates them).
-        $normalizedName = mb_strtolower(trim($rawName));
-
-        $alias = MerchantAlias::query()
-            ->where('user_id', $userId)
-            ->where('normalized_name', $normalizedName)
-            ->first();
-
-        if ($alias?->merchant !== null) {
-            return $this->backfillCategory($alias->merchant, $categoryName);
-        }
-
-        $result->incrementUnconfirmedMerchants();
-
-        return $this->createMerchantWithAlias($userId, $rawName, $rawName, $categoryName);
-    }
-
-    /**
-     * Assign a category to a merchant that has none yet, resolving/creating the
-     * category from the raw CSV name. Merchants that already have a category are
-     * left untouched so manual reassignments are not overwritten.
-     */
-    private function backfillCategory(Merchant $merchant, ?string $categoryName): Merchant
-    {
-        if ($merchant->category_id !== null || $categoryName === null) {
-            return $merchant;
-        }
-
-        $category = $this->resolveCategory($merchant->user_id, $categoryName);
-
-        if ($category !== null) {
-            $merchant->update(['category_id' => $category->id]);
-        }
-
-        return $merchant;
-    }
-
-    /**
-     * Find or create the user's category for the given raw CSV category name,
-     * matching case-insensitively on name. Returns null when no category was
-     * supplied on the row.
-     */
-    private function resolveCategory(int $userId, ?string $categoryName): ?Category
-    {
-        if ($categoryName === null) {
-            return null;
-        }
-
-        $category = Category::query()
-            ->where('user_id', $userId)
-            ->whereRaw('LOWER(name) = ?', [mb_strtolower($categoryName)])
-            ->first();
-
-        return $category
-            ?? Category::create(['user_id' => $userId, 'name' => $categoryName]);
-    }
-
-    /**
-     * Create an unconfirmed merchant together with a self-alias, so the merchant
-     * is always resolvable via the alias table while it awaits review. Wrapped
-     * in a transaction so a merchant is never persisted without its alias.
-     */
-    private function createMerchantWithAlias(int $userId, string $merchantName, string $aliasName, ?string $categoryName): Merchant
-    {
-        return DB::transaction(function () use ($userId, $merchantName, $aliasName, $categoryName): Merchant {
-            $category = $this->resolveCategory($userId, $categoryName);
-
-            $merchant = Merchant::create([
-                'user_id' => $userId,
-                'category_id' => $category?->id,
-                'name' => $merchantName,
-            ]);
-
-            $merchant->aliases()->create(['user_id' => $userId, 'name' => $aliasName]);
-
-            return $merchant;
-        });
     }
 
     /**

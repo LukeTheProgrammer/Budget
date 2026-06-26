@@ -1,7 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { create as uploadCreate } from '@/actions/App/Http/Controllers/Transactions/UploadController';
 import { TransactionFilters as TransactionFiltersBar } from '@/components/transactions/transaction-filters';
 import { TransactionTags } from '@/components/transactions/transaction-tags';
 import type { Tag } from '@/components/transactions/transaction-tags';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -123,14 +125,20 @@ export default function TransactionsIndex({
         <>
             <Head title="Transactions" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div>
-                    <h1 className="text-xl font-semibold">Transactions</h1>
-                    <p className="text-sm text-muted-foreground">
-                        {pagination.total.toLocaleString()}{' '}
-                        {pagination.total === 1
-                            ? 'transaction'
-                            : 'transactions'}
-                    </p>
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <h1 className="text-xl font-semibold">Transactions</h1>
+                        <p className="text-sm text-muted-foreground">
+                            {pagination.total.toLocaleString()}{' '}
+                            {pagination.total === 1
+                                ? 'transaction'
+                                : 'transactions'}
+                        </p>
+                    </div>
+
+                    <Button asChild size="sm">
+                        <Link href={uploadCreate().url}>Upload file</Link>
+                    </Button>
                 </div>
 
                 <TransactionFiltersBar

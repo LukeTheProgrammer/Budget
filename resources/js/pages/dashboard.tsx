@@ -2,8 +2,6 @@ import { Head, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { AccountFormDialog } from '@/components/accounts/account-form-dialog';
-import { Button } from '@/components/ui/button';
-import type { AccountTypeOption } from '@/types/accounts';
 import { BudgetSummaryCard } from '@/components/dashboard/budget-summary';
 import { CategoryBreakdown } from '@/components/dashboard/category-breakdown';
 import type { CategoryBreakdownRow } from '@/components/dashboard/category-breakdown';
@@ -13,8 +11,10 @@ import { SummaryCards } from '@/components/dashboard/summary-cards';
 import type { SpendingSummary } from '@/components/dashboard/summary-cards';
 import { TransactionsTable } from '@/components/dashboard/transactions-table';
 import type { TransactionRow } from '@/components/dashboard/transactions-table';
+import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import type { BudgetSummary } from '@/types';
+import type { AccountTypeOption } from '@/types/accounts';
 
 export type DashboardProps = {
     currency: string;
