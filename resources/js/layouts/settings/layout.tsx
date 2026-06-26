@@ -6,7 +6,6 @@ import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { index as accountsIndex } from '@/routes/accounts';
-import { edit as editAppearance } from '@/routes/appearance';
 import { index as connectionsIndex } from '@/routes/connections';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
@@ -19,23 +18,18 @@ const sidebarNavItems: NavItem[] = [
         icon: null,
     },
     {
+        title: 'Accounts',
+        href: accountsIndex(),
+        icon: null,
+    },
+    {
         title: 'Security',
         href: editSecurity(),
         icon: null,
     },
     {
-        title: 'Appearance',
-        href: editAppearance(),
-        icon: null,
-    },
-    {
         title: 'Connections',
         href: connectionsIndex(),
-        icon: null,
-    },
-    {
-        title: 'Accounts',
-        href: accountsIndex(),
         icon: null,
     },
 ];

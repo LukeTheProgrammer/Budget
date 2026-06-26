@@ -25,8 +25,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:6,1')
         ->name('user-password.update');
 
-    Route::inertia('settings/appearance', 'settings-appearance')->name('appearance.edit');
-
     Route::get('settings/connections', [PlaidConnectionController::class, 'index'])->name('connections.index');
 
     Route::get('settings/accounts', [AccountController::class, 'index'])->name('accounts.index');

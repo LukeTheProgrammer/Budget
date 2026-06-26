@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AccountType;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Support\SessionPeriod;
@@ -30,6 +31,8 @@ class DashboardController extends Controller
 
         return Inertia::render('dashboard', [
             'currency' => UserCurrency::for($userId),
+            'has_accounts' => $request->user()->accounts()->exists(),
+            'accountTypes' => AccountType::options(),
             'summary' => $summary,
             'budget' => $this->budget($userId, $period->months(), $summary['total_cents']),
             'categories' => $this->categories($userId, $start, $end),
