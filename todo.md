@@ -1,1 +1,3 @@
 - Merge Merchants
+- CRUD Accounts
+- Upload transactions

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Plaid\PlaidConnectionController;
+use App\Http\Controllers\Settings\AccountController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
@@ -27,4 +28,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('settings/appearance', 'settings-appearance')->name('appearance.edit');
 
     Route::get('settings/connections', [PlaidConnectionController::class, 'index'])->name('connections.index');
+
+    Route::get('settings/accounts', [AccountController::class, 'index'])->name('accounts.index');
+    Route::post('settings/accounts', [AccountController::class, 'store'])->name('accounts.store');
+    Route::patch('settings/accounts/{account}', [AccountController::class, 'update'])->name('accounts.update');
+    Route::delete('settings/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
 });

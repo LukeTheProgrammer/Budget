@@ -265,5 +265,5 @@ Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/009-plaid-bank-integration/plan.md`
+`specs/010-manage-accounts/plan.md`
 <!-- SPECKIT END -->

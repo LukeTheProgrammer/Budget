@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AccountType;
 use Database\Factories\AccountFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -17,7 +19,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $plaid_connection_id
  * @property string|null $plaid_account_id
  * @property string $name
- * @property string|null $type
+ * @property AccountType|null $type
  * @property string|null $last_four
  * @property string $currency
  * @property int|null $balance_cents
@@ -39,8 +41,27 @@ class Account extends Model
     protected function casts(): array
     {
         return [
+            'type' => AccountType::class,
             'balance_cents' => 'integer',
         ];
+    }
+
+    /**
+     * When an account is soft-deleted, hide its transactions along with it by
+     * soft-deleting them in the same operation. Both records are retained in
+     * the database; they simply disappear from normal views.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (Account $account): void {
+            if ($account->isForceDeleting()) {
+                return;
+            }
+
+            DB::transaction(function () use ($account): void {
+                $account->transactions()->delete();
+            });
+        });
     }
 
     /**
