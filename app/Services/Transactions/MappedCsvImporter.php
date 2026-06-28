@@ -57,7 +57,8 @@ class MappedCsvImporter
 
             try {
                 $row = $this->parseRow($columns, $lineNumber, $columnIndex, $amountSign, $dateFormat, $account);
-                $this->rowStore->store($account, $row, $result);
+                $categoryName = $this->value($columns, $columnIndex['category'] ?? null);
+                $this->rowStore->store($account, $row, $result, $categoryName !== '' ? $categoryName : null);
             } catch (Throwable $e) {
                 $result->recordFailure($lineNumber, $e->getMessage());
             }

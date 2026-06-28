@@ -41,6 +41,7 @@ class UploadTransactionsRequest extends FormRequest
             'mapping.fields.amount' => ['required', 'string'],
             'mapping.fields.description' => ['required', 'string'],
             'mapping.fields.currency' => ['nullable', 'string'],
+            'mapping.fields.category' => ['nullable', 'string'],
             'mapping.amount_sign' => ['required', 'in:as_is,invert'],
             'mapping.date_format' => ['nullable', 'string'],
         ];

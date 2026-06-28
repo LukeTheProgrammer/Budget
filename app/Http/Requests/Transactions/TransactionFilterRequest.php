@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Transactions;
 
+use App\Models\Account;
 use App\Models\Category;
 use App\Models\Merchant;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -29,6 +30,10 @@ class TransactionFilterRequest extends FormRequest
         $this->merge([
             'start' => $this->sanitizeDate($this->input('start')),
             'end' => $this->sanitizeDate($this->input('end')),
+            'account_id' => $this->sanitizeOwnedId(
+                $this->input('account_id'),
+                Account::class,
+            ),
             'merchant_id' => $this->sanitizeOwnedId(
                 $this->input('merchant_id'),
                 Merchant::class,
@@ -52,6 +57,7 @@ class TransactionFilterRequest extends FormRequest
         return [
             'start' => ['nullable', 'date'],
             'end' => ['nullable', 'date'],
+            'account_id' => ['nullable', 'integer'],
             'merchant_id' => ['nullable', 'integer'],
             'category_id' => ['nullable', 'integer'],
             'min_amount' => ['nullable', 'numeric', 'min:0'],
@@ -65,7 +71,7 @@ class TransactionFilterRequest extends FormRequest
      * converted from major units (dollars) to integer cents; only keys with a
      * provided value are present.
      *
-     * @return array{start?: string, end?: string, merchant_id?: int, category_id?: int, min_amount_cents?: int, max_amount_cents?: int}
+     * @return array{start?: string, end?: string, account_id?: int, merchant_id?: int, category_id?: int, min_amount_cents?: int, max_amount_cents?: int}
      */
     public function filters(): array
     {
@@ -77,6 +83,10 @@ class TransactionFilterRequest extends FormRequest
 
         if ($this->filled('end')) {
             $filters['end'] = $this->date('end')->toDateString();
+        }
+
+        if ($this->filled('account_id')) {
+            $filters['account_id'] = $this->integer('account_id');
         }
 
         if ($this->filled('merchant_id')) {
@@ -102,13 +112,14 @@ class TransactionFilterRequest extends FormRequest
      * The filters echoed back to the page in the units the user supplied, so
      * the controls can re-hydrate exactly (FR-011).
      *
-     * @return array{start: string|null, end: string|null, merchant_id: int|null, category_id: int|null, min_amount: float|null, max_amount: float|null}
+     * @return array{start: string|null, end: string|null, account_id: int|null, merchant_id: int|null, category_id: int|null, min_amount: float|null, max_amount: float|null}
      */
     public function echoedFilters(): array
     {
         return [
             'start' => $this->filled('start') ? $this->date('start')->toDateString() : null,
             'end' => $this->filled('end') ? $this->date('end')->toDateString() : null,
+            'account_id' => $this->filled('account_id') ? $this->integer('account_id') : null,
             'merchant_id' => $this->filled('merchant_id') ? $this->integer('merchant_id') : null,
             'category_id' => $this->filled('category_id') ? $this->integer('category_id') : null,
             'min_amount' => $this->filled('min_amount') ? (float) $this->input('min_amount') : null,

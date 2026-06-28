@@ -16,8 +16,14 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Card, CardContent, CardHeader } from '../ui/card';
 
-export type FieldKey = 'posted_at' | 'amount' | 'description' | 'currency';
+export type FieldKey =
+    | 'posted_at'
+    | 'amount'
+    | 'description'
+    | 'currency'
+    | 'category';
 
 export type ColumnMapping = {
     fields: Record<FieldKey, string>;
@@ -33,6 +39,7 @@ const FIELDS: { key: FieldKey; label: string; required: boolean }[] = [
     { key: 'amount', label: 'Amount', required: true },
     { key: 'description', label: 'Description / Merchant', required: true },
     { key: 'currency', label: 'Currency (optional)', required: false },
+    { key: 'category', label: 'Category (optional)', required: false },
 ];
 
 const REQUIRED_FIELDS: FieldKey[] = ['posted_at', 'amount', 'description'];
@@ -111,50 +118,58 @@ export function ColumnMapper({
     }
 
     return (
-        <div className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-                {FIELDS.map(({ key, label, required }) => (
-                    <div key={key} className="space-y-2">
-                        <Label htmlFor={`field-${key}`}>
-                            {label}
-                            {required && (
-                                <span className="text-red-600"> *</span>
-                            )}
-                        </Label>
-                        <Select
-                            value={
-                                mapping.fields[key] === ''
-                                    ? UNMAPPED
-                                    : mapping.fields[key]
-                            }
-                            onValueChange={(value) =>
-                                setField(key, value === UNMAPPED ? '' : value)
-                            }
-                        >
-                            <SelectTrigger id={`field-${key}`}>
-                                <SelectValue placeholder="Select a column" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {!required && (
-                                    <SelectItem value={UNMAPPED}>
-                                        Not mapped
-                                    </SelectItem>
-                                )}
-                                {headers.map((header, position) => (
-                                    <SelectItem
-                                        key={`${header}-${position}`}
-                                        value={header}
+        <>
+            <Card>
+                <CardHeader>
+                    Field Mapping
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-6">
+                        <div className="">
+                            {FIELDS.map(({ key, label, required }) => (
+                                <div key={key} className="space-y-2 w-full">
+                                    <Label htmlFor={`field-${key}`}>
+                                        {label}
+                                        {required && (
+                                            <span className="text-red-600"> *</span>
+                                        )}
+                                    </Label>
+                                    <Select
+                                        value={
+                                            mapping.fields[key] === ''
+                                                ? UNMAPPED
+                                                : mapping.fields[key]
+                                        }
+                                        onValueChange={(value) =>
+                                            setField(key, value === UNMAPPED ? '' : value)
+                                        }
                                     >
-                                        {header}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={fieldMessage(key, required)} />
+                                        <SelectTrigger id={`field-${key}`} className="w-full">
+                                            <SelectValue placeholder="Select a column" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {!required && (
+                                                <SelectItem value={UNMAPPED}>
+                                                    Not mapped
+                                                </SelectItem>
+                                            )}
+                                            {headers.map((header, position) => (
+                                                <SelectItem
+                                                    key={`${header}-${position}`}
+                                                    value={header}
+                                                >
+                                                    {header}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError message={fieldMessage(key, required)} />
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                ))}
-            </div>
-
+                </CardContent>
+            </Card>
             <div className="space-y-2">
                 <Label htmlFor="amount-sign">Amount sign</Label>
                 <Select
@@ -166,7 +181,7 @@ export function ColumnMapper({
                         })
                     }
                 >
-                    <SelectTrigger id="amount-sign" className="sm:w-80">
+                    <SelectTrigger id="amount-sign" className="w-full">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -221,7 +236,7 @@ export function ColumnMapper({
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }
 
@@ -246,6 +261,7 @@ export function suggestMapping(headers: string[]): ColumnMapping {
             amount: match(['amount', 'value', 'debit']),
             description: match(['description', 'merchant', 'name', 'payee']),
             currency: match(['currency']),
+            category: match(['category', 'type']),
         },
         amount_sign: 'as_is',
         date_format: null,
@@ -254,7 +270,13 @@ export function suggestMapping(headers: string[]): ColumnMapping {
 
 export function emptyMapping(): ColumnMapping {
     return {
-        fields: { posted_at: '', amount: '', description: '', currency: '' },
+        fields: {
+            posted_at: '',
+            amount: '',
+            description: '',
+            currency: '',
+            category: '',
+        },
         amount_sign: 'as_is',
         date_format: null,
     };

@@ -35,6 +35,7 @@ export type FilterOption = {
 export type TransactionFilters = {
     start: string | null;
     end: string | null;
+    account_id: number | null;
     merchant_id: number | null;
     category_id: number | null;
     min_amount: number | null;
@@ -59,6 +60,7 @@ export type TransactionsPageProps = {
     transactions: TransactionRow[];
     pagination: Pagination;
     filters: TransactionFilters;
+    account_options: FilterOption[];
     merchant_options: FilterOption[];
     category_options: FilterOption[];
     available_tags: Tag[];
@@ -84,6 +86,10 @@ function buildQuery(filters: TransactionFilters): Record<string, string> {
         query.end = filters.end;
     }
 
+    if (filters.account_id !== null) {
+        query.account_id = String(filters.account_id);
+    }
+
     if (filters.merchant_id !== null) {
         query.merchant_id = String(filters.merchant_id);
     }
@@ -107,6 +113,7 @@ export default function TransactionsIndex({
     transactions,
     pagination,
     filters,
+    account_options,
     merchant_options,
     category_options,
     available_tags,
@@ -144,6 +151,7 @@ export default function TransactionsIndex({
                 <TransactionFiltersBar
                     key={JSON.stringify(filters)}
                     filters={filters}
+                    accountOptions={account_options}
                     merchantOptions={merchant_options}
                     categoryOptions={category_options}
                     onChange={applyFilters}

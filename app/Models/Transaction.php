@@ -183,10 +183,10 @@ class Transaction extends Model
      * filter is applied only when its key is present in $filters.
      *
      * Supported keys: start, end (Y-m-d posted_at bounds, inclusive),
-     * merchant_id, category_id, min_amount_cents, max_amount_cents.
+     * account_id, merchant_id, category_id, min_amount_cents, max_amount_cents.
      *
      * @param  Builder<Transaction>  $query
-     * @param  array{start?: ?string, end?: ?string, merchant_id?: ?int, category_id?: ?int, min_amount_cents?: ?int, max_amount_cents?: ?int}  $filters
+     * @param  array{start?: ?string, end?: ?string, account_id?: ?int, merchant_id?: ?int, category_id?: ?int, min_amount_cents?: ?int, max_amount_cents?: ?int}  $filters
      * @return Builder<Transaction>
      */
     #[Scope]
@@ -204,6 +204,10 @@ class Transaction extends Model
 
         if (isset($filters['end'])) {
             $query->whereDate('transactions.posted_at', '<=', $filters['end']);
+        }
+
+        if (isset($filters['account_id'])) {
+            $query->where('transactions.account_id', $filters['account_id']);
         }
 
         if (isset($filters['merchant_id'])) {

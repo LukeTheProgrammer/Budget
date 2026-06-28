@@ -3,23 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import type {
-    FilterOption,
-    TransactionFilters,
-} from '@/pages/transactions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { FilterOption, TransactionFilters } from '@/pages/transactions';
 
 const ALL = 'all';
 
 type DraftFilters = {
     start: string;
     end: string;
+    account_id: string;
     merchant_id: string;
     category_id: string;
     min_amount: string;
@@ -30,14 +22,11 @@ function toDraft(filters: TransactionFilters): DraftFilters {
     return {
         start: filters.start ?? '',
         end: filters.end ?? '',
-        merchant_id:
-            filters.merchant_id !== null ? String(filters.merchant_id) : ALL,
-        category_id:
-            filters.category_id !== null ? String(filters.category_id) : ALL,
-        min_amount:
-            filters.min_amount !== null ? String(filters.min_amount) : '',
-        max_amount:
-            filters.max_amount !== null ? String(filters.max_amount) : '',
+        account_id: filters.account_id !== null ? String(filters.account_id) : ALL,
+        merchant_id: filters.merchant_id !== null ? String(filters.merchant_id) : ALL,
+        category_id: filters.category_id !== null ? String(filters.category_id) : ALL,
+        min_amount: filters.min_amount !== null ? String(filters.min_amount) : '',
+        max_amount: filters.max_amount !== null ? String(filters.max_amount) : '',
     };
 }
 
@@ -57,10 +46,9 @@ function toFilters(draft: DraftFilters): TransactionFilters {
     return {
         start: draft.start.trim() === '' ? null : draft.start,
         end: draft.end.trim() === '' ? null : draft.end,
-        merchant_id:
-            draft.merchant_id === ALL ? null : Number(draft.merchant_id),
-        category_id:
-            draft.category_id === ALL ? null : Number(draft.category_id),
+        account_id: draft.account_id === ALL ? null : Number(draft.account_id),
+        merchant_id: draft.merchant_id === ALL ? null : Number(draft.merchant_id),
+        category_id: draft.category_id === ALL ? null : Number(draft.category_id),
         min_amount: toNumber(draft.min_amount),
         max_amount: toNumber(draft.max_amount),
     };
@@ -69,6 +57,7 @@ function toFilters(draft: DraftFilters): TransactionFilters {
 const EMPTY_FILTERS: TransactionFilters = {
     start: null,
     end: null,
+    account_id: null,
     merchant_id: null,
     category_id: null,
     min_amount: null,
@@ -77,11 +66,13 @@ const EMPTY_FILTERS: TransactionFilters = {
 
 export function TransactionFilters({
     filters,
+    accountOptions,
     merchantOptions,
     categoryOptions,
     onChange,
 }: {
     filters: TransactionFilters;
+    accountOptions: FilterOption[];
     merchantOptions: FilterOption[];
     categoryOptions: FilterOption[];
     onChange: (filters: TransactionFilters) => void;
@@ -95,6 +86,7 @@ export function TransactionFilters({
     const hasFilters =
         filters.start !== null ||
         filters.end !== null ||
+        filters.account_id !== null ||
         filters.merchant_id !== null ||
         filters.category_id !== null ||
         filters.min_amount !== null ||
@@ -111,7 +103,7 @@ export function TransactionFilters({
 
     return (
         <form
-            className="grid gap-3 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid gap-3 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-4"
             onSubmit={(event) => {
                 event.preventDefault();
                 apply();
@@ -124,9 +116,7 @@ export function TransactionFilters({
                         id="filter-start"
                         type="date"
                         value={draft.start}
-                        onChange={(event) =>
-                            update({ start: event.target.value })
-                        }
+                        onChange={(event) => update({ start: event.target.value })}
                     />
                 </div>
                 <div>
@@ -135,22 +125,36 @@ export function TransactionFilters({
                         id="filter-end"
                         type="date"
                         value={draft.end}
-                        onChange={(event) =>
-                            update({ end: event.target.value })
-                        }
+                        onChange={(event) => update({ end: event.target.value })}
                     />
                 </div>
             </div>
 
             <div className="grid gap-1.5">
                 <div>
+                    <Label htmlFor="filter-account">Account</Label>
+                    <Combobox
+                        id="filter-account"
+                        value={draft.account_id}
+                        onValueChange={(value) => update({ account_id: value })}
+                        placeholder="All accounts"
+                        searchPlaceholder="Search accounts..."
+                        emptyText="No accounts found."
+                        options={[
+                            { value: ALL, label: 'All accounts' },
+                            ...accountOptions.map((option) => ({
+                                value: String(option.id),
+                                label: option.label,
+                            })),
+                        ]}
+                    />
+                </div>
+                <div>
                     <Label htmlFor="filter-merchant">Merchant</Label>
                     <Combobox
                         id="filter-merchant"
                         value={draft.merchant_id}
-                        onValueChange={(value) =>
-                            update({ merchant_id: value })
-                        }
+                        onValueChange={(value) => update({ merchant_id: value })}
                         placeholder="All merchants"
                         searchPlaceholder="Search merchants..."
                         emptyText="No merchants found."
@@ -165,22 +169,14 @@ export function TransactionFilters({
                 </div>
                 <div>
                     <Label htmlFor="filter-category">Category</Label>
-                    <Select
-                        value={draft.category_id}
-                        onValueChange={(value) =>
-                            update({ category_id: value })
-                        }
-                    >
+                    <Select value={draft.category_id} onValueChange={(value) => update({ category_id: value })}>
                         <SelectTrigger id="filter-category" className="w-full">
                             <SelectValue placeholder="All categories" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value={ALL}>All categories</SelectItem>
                             {categoryOptions.map((option) => (
-                                <SelectItem
-                                    key={option.id}
-                                    value={String(option.id)}
-                                >
+                                <SelectItem key={option.id} value={String(option.id)}>
                                     {option.label}
                                 </SelectItem>
                             ))}
@@ -199,9 +195,7 @@ export function TransactionFilters({
                         min="0"
                         inputMode="decimal"
                         value={draft.min_amount}
-                        onChange={(event) =>
-                            update({ min_amount: event.target.value })
-                        }
+                        onChange={(event) => update({ min_amount: event.target.value })}
                     />
                 </div>
                 <div>
@@ -213,9 +207,7 @@ export function TransactionFilters({
                         min="0"
                         inputMode="decimal"
                         value={draft.max_amount}
-                        onChange={(event) =>
-                            update({ max_amount: event.target.value })
-                        }
+                        onChange={(event) => update({ max_amount: event.target.value })}
                     />
                 </div>
             </div>

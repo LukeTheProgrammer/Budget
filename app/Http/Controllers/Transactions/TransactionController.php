@@ -38,6 +38,7 @@ class TransactionController extends Controller
             'transactions' => $this->transactionRows($transactions),
             'pagination' => $this->pagination($transactions),
             'filters' => $request->echoedFilters(),
+            'account_options' => $this->accountOptions($userId),
             'merchant_options' => $this->merchantOptions($userId),
             'category_options' => $this->categoryOptions($userId),
             'available_tags' => $this->availableTags(),
@@ -104,6 +105,24 @@ class TransactionController extends Controller
                 ])
                 ->all(),
         ];
+    }
+
+    /**
+     * The authenticated user's accounts as filter options.
+     *
+     * @return list<array{id: int, label: string}>
+     */
+    private function accountOptions(int $userId): array
+    {
+        return Account::query()
+            ->where('user_id', $userId)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Account $account): array => [
+                'id' => $account->id,
+                'label' => $account->name,
+            ])
+            ->all();
     }
 
     /**

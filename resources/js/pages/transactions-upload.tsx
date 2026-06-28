@@ -167,7 +167,7 @@ export default function TransactionsUpload() {
                         value={data.account_id}
                         onValueChange={chooseAccount}
                     >
-                        <SelectTrigger id="account" className="sm:w-80">
+                        <SelectTrigger id="account" className="w-full">
                             <SelectValue placeholder="Select an account" />
                         </SelectTrigger>
                         <SelectContent>
