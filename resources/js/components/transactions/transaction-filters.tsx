@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import type { FlowType, FlowTypeOption } from '@/components/transactions/transaction-flow-type';
 import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { FilterOption, TransactionFilters } from '@/pages/transactions';
 
 const ALL = 'all';
@@ -16,6 +18,7 @@ type DraftFilters = {
     category_id: string;
     min_amount: string;
     max_amount: string;
+    flow_type: FlowType[];
 };
 
 function toDraft(filters: TransactionFilters): DraftFilters {
@@ -27,6 +30,7 @@ function toDraft(filters: TransactionFilters): DraftFilters {
         category_id: filters.category_id !== null ? String(filters.category_id) : ALL,
         min_amount: filters.min_amount !== null ? String(filters.min_amount) : '',
         max_amount: filters.max_amount !== null ? String(filters.max_amount) : '',
+        flow_type: filters.flow_type,
     };
 }
 
@@ -51,6 +55,7 @@ function toFilters(draft: DraftFilters): TransactionFilters {
         category_id: draft.category_id === ALL ? null : Number(draft.category_id),
         min_amount: toNumber(draft.min_amount),
         max_amount: toNumber(draft.max_amount),
+        flow_type: draft.flow_type,
     };
 }
 
@@ -62,6 +67,7 @@ const EMPTY_FILTERS: TransactionFilters = {
     category_id: null,
     min_amount: null,
     max_amount: null,
+    flow_type: [],
 };
 
 export function TransactionFilters({
@@ -69,12 +75,14 @@ export function TransactionFilters({
     accountOptions,
     merchantOptions,
     categoryOptions,
+    flowTypeOptions,
     onChange,
 }: {
     filters: TransactionFilters;
     accountOptions: FilterOption[];
     merchantOptions: FilterOption[];
     categoryOptions: FilterOption[];
+    flowTypeOptions: FlowTypeOption[];
     onChange: (filters: TransactionFilters) => void;
 }) {
     const [draft, setDraft] = useState<DraftFilters>(() => toDraft(filters));
@@ -90,7 +98,8 @@ export function TransactionFilters({
         filters.merchant_id !== null ||
         filters.category_id !== null ||
         filters.min_amount !== null ||
-        filters.max_amount !== null;
+        filters.max_amount !== null ||
+        filters.flow_type.length > 0;
 
     const apply = (): void => {
         onChange(toFilters(draft));
@@ -210,6 +219,26 @@ export function TransactionFilters({
                         onChange={(event) => update({ max_amount: event.target.value })}
                     />
                 </div>
+            </div>
+
+            <div className="grid gap-1.5">
+                <Label htmlFor="filter-flow-type">Type</Label>
+                <ToggleGroup
+                    id="filter-flow-type"
+                    type="multiple"
+                    variant="outline"
+                    size="sm"
+                    className="justify-start"
+                    value={draft.flow_type}
+                    onValueChange={(value: string[]) => update({ flow_type: value as FlowType[] })}
+                >
+                    {flowTypeOptions.map((option) => (
+                        <ToggleGroupItem key={option.value} value={option.value}>
+                            {option.label}
+                        </ToggleGroupItem>
+                    ))}
+                </ToggleGroup>
+                <p className="text-xs text-muted-foreground">Selecting none lists every type.</p>
             </div>
 
             <div className="col-span-full flex items-end justify-end">

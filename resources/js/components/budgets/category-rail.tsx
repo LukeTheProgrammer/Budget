@@ -41,8 +41,7 @@ export function CategoryRail({
                             onClick={() => onSort(option.value)}
                             className={cn(
                                 'rounded-md px-2.5 py-1 text-xs text-muted-foreground transition-colors',
-                                sortMode === option.value &&
-                                    'bg-background font-medium text-foreground shadow-sm',
+                                sortMode === option.value && 'bg-background font-medium text-foreground shadow-sm',
                             )}
                         >
                             {option.label}
@@ -129,10 +128,8 @@ function CategoryRow({
                     'No budget'
                 ) : (
                     <>
-                        <b className="font-semibold text-foreground">
-                            {formatMoney(spent, currency)}
-                        </b>{' '}
-                        / {formatMoney(budgeted, currency)}
+                        <b className="font-semibold text-foreground">{formatMoney(spent, currency)}</b> /{' '}
+                        {formatMoney(budgeted, currency)}
                     </>
                 )}
             </span>

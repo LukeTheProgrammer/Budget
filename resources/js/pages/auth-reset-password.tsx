@@ -36,10 +36,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                                 className="mt-1 block w-full"
                                 readOnly
                             />
-                            <InputError
-                                message={errors.email}
-                                className="mt-2"
-                            />
+                            <InputError message={errors.email} className="mt-2" />
                         </div>
 
                         <div className="grid gap-2">
@@ -57,9 +54,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password_confirmation">
-                                Confirm password
-                            </Label>
+                            <Label htmlFor="password_confirmation">Confirm password</Label>
                             <PasswordInput
                                 id="password_confirmation"
                                 name="password_confirmation"
@@ -68,10 +63,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                                 placeholder="Confirm password"
                                 passwordrules={passwordRules}
                             />
-                            <InputError
-                                message={errors.password_confirmation}
-                                className="mt-2"
-                            />
+                            <InputError message={errors.password_confirmation} className="mt-2" />
                         </div>
 
                         <Button

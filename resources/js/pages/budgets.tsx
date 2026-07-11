@@ -8,18 +8,10 @@ import { TotalsBar } from '@/components/budgets/totals-bar';
 import { index as budgetsIndex } from '@/routes/budgets';
 import type { BudgetCategoryRow, BudgetsPageProps, SortMode } from '@/types';
 
-export default function Budgets({
-    currency,
-    months,
-    pacing,
-    categories,
-}: BudgetsPageProps) {
+export default function Budgets({ currency, months, pacing, categories }: BudgetsPageProps) {
     const period = usePage().props.period;
 
-    const derived = useMemo(
-        () => categories.map((row) => deriveCategory(row, months)),
-        [categories, months],
-    );
+    const derived = useMemo(() => categories.map((row) => deriveCategory(row, months)), [categories, months]);
 
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [sortMode, setSortMode] = useState<SortMode>('budget');
@@ -60,11 +52,7 @@ export default function Budgets({
     }, [derived]);
 
     const selected =
-        (selectedId !== null
-            ? derived.find((item) => item.row.id === selectedId)
-            : undefined) ??
-        sorted[0] ??
-        null;
+        (selectedId !== null ? derived.find((item) => item.row.id === selectedId) : undefined) ?? sorted[0] ?? null;
 
     return (
         <>
@@ -72,27 +60,18 @@ export default function Budgets({
             <div className="flex h-[calc(100svh-4rem)] flex-col gap-5 overflow-hidden p-4">
                 <header className="grid items-center gap-x-8 gap-y-4 lg:grid-cols-[33%_1fr]">
                     <div>
-                        <h1 className="text-xl font-semibold tracking-tight">
-                            Budgets
-                        </h1>
-                        <p className="text-sm text-muted-foreground">
-                            {period.label}
-                        </p>
+                        <h1 className="text-xl font-semibold tracking-tight">Budgets</h1>
+                        <p className="text-sm text-muted-foreground">{period.label}</p>
                     </div>
 
-                    <div>
-                        {totals.budgeted > 0 && (
-                            <TotalsBar totals={totals} currency={currency} />
-                        )}
-                    </div>
+                    <div>{totals.budgeted > 0 && <TotalsBar totals={totals} currency={currency} />}</div>
                 </header>
 
                 {derived.length === 0 ? (
                     <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl border border-dashed p-12 text-center">
                         <p className="font-medium">No categories yet</p>
                         <p className="text-sm text-muted-foreground">
-                            Assign categories to your merchants first, then set
-                            a monthly budget for each.
+                            Assign categories to your merchants first, then set a monthly budget for each.
                         </p>
                     </div>
                 ) : (
@@ -119,12 +98,7 @@ export default function Budgets({
                 )}
             </div>
 
-            <EditBudgetDialog
-                category={editing}
-                currency={currency}
-                months={months}
-                onClose={() => setEditing(null)}
-            />
+            <EditBudgetDialog category={editing} currency={currency} months={months} onClose={() => setEditing(null)} />
         </>
     );
 }

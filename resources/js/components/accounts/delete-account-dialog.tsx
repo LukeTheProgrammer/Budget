@@ -17,10 +17,7 @@ type DeleteAccountDialogProps = {
     onClose: () => void;
 };
 
-export function DeleteAccountDialog({
-    account,
-    onClose,
-}: DeleteAccountDialogProps) {
+export function DeleteAccountDialog({ account, onClose }: DeleteAccountDialogProps) {
     const { delete: destroyAccount, processing } = useForm();
 
     function confirmDelete(): void {
@@ -47,8 +44,8 @@ export function DeleteAccountDialog({
                 <DialogHeader>
                     <DialogTitle>Delete account</DialogTitle>
                     <DialogDescription>
-                        Delete {account?.name}? It and its transactions will be
-                        hidden from your views. This cannot be undone from here.
+                        Delete {account?.name}? It and its transactions will be hidden from your views. This cannot be
+                        undone from here.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -56,12 +53,7 @@ export function DeleteAccountDialog({
                     <Button type="button" variant="ghost" onClick={onClose}>
                         Cancel
                     </Button>
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={confirmDelete}
-                        disabled={processing}
-                    >
+                    <Button type="button" variant="destructive" onClick={confirmDelete} disabled={processing}>
                         Delete account
                     </Button>
                 </DialogFooter>

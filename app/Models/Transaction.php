@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\FlowType;
+use App\Enums\FlowTypeSource;
 use Database\Factories\TransactionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -20,6 +22,9 @@ use Illuminate\Support\Facades\DB;
  * @property int $account_id
  * @property int|null $merchant_id
  * @property int $amount_cents
+ * @property FlowType $flow_type
+ * @property FlowTypeSource $flow_type_source
+ * @property int|null $transfer_pair_id
  * @property string $currency
  * @property string|null $description
  * @property Carbon $posted_at
@@ -28,7 +33,7 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  */
-#[Fillable(['account_id', 'merchant_id', 'amount_cents', 'currency', 'description', 'posted_at', 'import_hash'])]
+#[Fillable(['account_id', 'merchant_id', 'amount_cents', 'flow_type', 'flow_type_source', 'transfer_pair_id', 'currency', 'description', 'posted_at', 'import_hash'])]
 class Transaction extends Model
 {
     /** @use HasFactory<TransactionFactory> */
@@ -43,6 +48,8 @@ class Transaction extends Model
     {
         return [
             'amount_cents' => 'integer',
+            'flow_type' => FlowType::class,
+            'flow_type_source' => FlowTypeSource::class,
             'posted_at' => 'date',
         ];
     }
@@ -51,9 +58,10 @@ class Transaction extends Model
      * Aggregate spending per category for a user over a date range.
      *
      * Transactions roll up to a category through their merchant; a NULL
-     * category_id is reported as "Uncategorized". Only outflows (positive
-     * amounts) count as spending; refunds and credits are excluded. Returns one
-     * row per category with the summed amount in cents, ordered largest first.
+     * category_id is reported as "Uncategorized". Only expenses and refunds
+     * count as spending; income and transfers are excluded. Refunds are stored
+     * negative, so they net out of their category's total. Returns one row per
+     * category with the summed amount in cents, ordered largest first.
      *
      * @param  Builder<Transaction>  $query
      * @param  \DateTimeInterface|string  $start
@@ -68,7 +76,7 @@ class Transaction extends Model
             ->leftJoin('merchants', 'merchants.id', '=', 'transactions.merchant_id')
             ->leftJoin('categories', 'categories.id', '=', 'merchants.category_id')
             ->where('accounts.user_id', $userId)
-            ->where('transactions.amount_cents', '>', 0)
+            ->whereIn('transactions.flow_type', FlowType::spendingValues())
             ->whereBetween('transactions.posted_at', [$start, $end])
             ->groupBy('categories.id', 'categories.name', 'categories.color')
             ->orderByDesc('total_cents')
@@ -83,9 +91,9 @@ class Transaction extends Model
     /**
      * Summarize spending for a user over a date range.
      *
-     * Only outflows (positive amounts) count as spending; refunds and credits
-     * (negative amounts) are excluded. Returns a single row with the summed
-     * amount in cents and the transaction count.
+     * Only expenses and refunds count as spending; income and transfers are
+     * excluded. Refunds are stored negative, so they reduce the total. Returns
+     * a single row with the summed amount in cents and the transaction count.
      *
      * @param  Builder<Transaction>  $query
      * @param  \DateTimeInterface|string  $start
@@ -98,7 +106,7 @@ class Transaction extends Model
         return $query
             ->join('accounts', 'accounts.id', '=', 'transactions.account_id')
             ->where('accounts.user_id', $userId)
-            ->where('transactions.amount_cents', '>', 0)
+            ->whereIn('transactions.flow_type', FlowType::spendingValues())
             ->whereBetween('transactions.posted_at', [$start, $end])
             ->select([
                 DB::raw('COALESCE(SUM(transactions.amount_cents), 0) as total_cents'),
@@ -107,10 +115,36 @@ class Transaction extends Model
     }
 
     /**
+     * Summarize income for a user over a date range.
+     *
+     * Inflows are stored as negative amounts, so the sum is negated to report a
+     * positive magnitude. Transfers between the user's own accounts are not
+     * income and are excluded by their flow type.
+     *
+     * @param  Builder<Transaction>  $query
+     * @param  \DateTimeInterface|string  $start
+     * @param  \DateTimeInterface|string  $end
+     * @return Builder<Transaction>
+     */
+    #[Scope]
+    protected function incomeSummary(Builder $query, int $userId, $start, $end): Builder
+    {
+        return $query
+            ->join('accounts', 'accounts.id', '=', 'transactions.account_id')
+            ->where('accounts.user_id', $userId)
+            ->where('transactions.flow_type', FlowType::Income)
+            ->whereBetween('transactions.posted_at', [$start, $end])
+            ->select([
+                DB::raw('COALESCE(-SUM(transactions.amount_cents), 0) as total_cents'),
+                DB::raw('COUNT(*) as transaction_count'),
+            ]);
+    }
+
+    /**
      * Aggregate spending into monthly totals for a user over a date range.
      *
-     * Only outflows (positive amounts) count as spending. Returns one row per
-     * month that has spending, keyed by a `YYYY-MM` month string; callers are
+     * Only expenses and refunds count as spending. Returns one row per month
+     * that has spending, keyed by a `YYYY-MM` month string; callers are
      * responsible for zero-filling months with no spending.
      *
      * @param  Builder<Transaction>  $query
@@ -124,7 +158,7 @@ class Transaction extends Model
         return $query
             ->join('accounts', 'accounts.id', '=', 'transactions.account_id')
             ->where('accounts.user_id', $userId)
-            ->where('transactions.amount_cents', '>', 0)
+            ->whereIn('transactions.flow_type', FlowType::spendingValues())
             ->whereBetween('transactions.posted_at', [$start, $end])
             ->groupBy('month')
             ->orderBy('month')
@@ -135,9 +169,9 @@ class Transaction extends Model
     }
 
     /**
-     * The user's most recent spending transactions (outflows only), newest
-     * first, capped at the given limit. Merchant and category are eager-loaded
-     * for display.
+     * The user's most recent expenses, newest first, capped at the given limit.
+     * Unlike the summing scopes, this lists expenses only — a refund is not a
+     * purchase. Merchant and category are eager-loaded for display.
      *
      * @param  Builder<Transaction>  $query
      * @return Builder<Transaction>
@@ -146,7 +180,7 @@ class Transaction extends Model
     protected function recentSpending(Builder $query, int $userId, int $limit = 10): Builder
     {
         return $query
-            ->where('transactions.amount_cents', '>', 0)
+            ->where('transactions.flow_type', FlowType::Expense)
             ->whereHas('account', fn (Builder $account) => $account->where('user_id', $userId))
             ->with(['merchant.category'])
             ->orderByDesc('transactions.posted_at')
@@ -155,9 +189,9 @@ class Transaction extends Model
     }
 
     /**
-     * The user's largest spending transactions (outflows only) within a date
-     * range, highest first, capped at the given limit. Merchant and category
-     * are eager-loaded for display.
+     * The user's largest expenses within a date range, highest first, capped at
+     * the given limit. Expenses only — a refund is not a large purchase.
+     * Merchant and category are eager-loaded for display.
      *
      * @param  Builder<Transaction>  $query
      * @param  \DateTimeInterface|string  $start
@@ -168,7 +202,7 @@ class Transaction extends Model
     protected function largestSpending(Builder $query, int $userId, $start, $end, int $limit = 10): Builder
     {
         return $query
-            ->where('transactions.amount_cents', '>', 0)
+            ->where('transactions.flow_type', FlowType::Expense)
             ->whereHas('account', fn (Builder $account) => $account->where('user_id', $userId))
             ->whereBetween('transactions.posted_at', [$start, $end])
             ->with(['merchant.category'])
@@ -183,10 +217,12 @@ class Transaction extends Model
      * filter is applied only when its key is present in $filters.
      *
      * Supported keys: start, end (Y-m-d posted_at bounds, inclusive),
-     * account_id, merchant_id, category_id, min_amount_cents, max_amount_cents.
+     * account_id, merchant_id, category_id, min_amount_cents, max_amount_cents,
+     * flow_types. Every flow type is listed when no flow_types filter is given
+     * — nothing is hidden, only excluded from the spending math.
      *
      * @param  Builder<Transaction>  $query
-     * @param  array{start?: ?string, end?: ?string, account_id?: ?int, merchant_id?: ?int, category_id?: ?int, min_amount_cents?: ?int, max_amount_cents?: ?int}  $filters
+     * @param  array{start?: ?string, end?: ?string, account_id?: ?int, merchant_id?: ?int, category_id?: ?int, min_amount_cents?: ?int, max_amount_cents?: ?int, flow_types?: ?list<string>}  $filters
      * @return Builder<Transaction>
      */
     #[Scope]
@@ -226,6 +262,10 @@ class Transaction extends Model
             $query->where('transactions.amount_cents', '<=', $filters['max_amount_cents']);
         }
 
+        if (isset($filters['flow_types'])) {
+            $query->whereIn('transactions.flow_type', $filters['flow_types']);
+        }
+
         return $query;
     }
 
@@ -237,6 +277,18 @@ class Transaction extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class);
+    }
+
+    /**
+     * The other leg of an internal transfer: the matching movement in another of
+     * the user's accounts. Null for every non-transfer transaction, and for a
+     * transfer whose counterpart account is not tracked in the app.
+     *
+     * @return BelongsTo<Transaction, $this>
+     */
+    public function transferPair(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class, 'transfer_pair_id');
     }
 
     /**

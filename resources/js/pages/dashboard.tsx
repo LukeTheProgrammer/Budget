@@ -3,11 +3,12 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { AccountFormDialog } from '@/components/accounts/account-form-dialog';
 import { BudgetSummaryCard } from '@/components/dashboard/budget-summary';
+import { CashFlowCards } from '@/components/dashboard/cash-flow';
+import type { CashFlow } from '@/components/dashboard/cash-flow';
 import { CategoryBreakdown } from '@/components/dashboard/category-breakdown';
 import type { CategoryBreakdownRow } from '@/components/dashboard/category-breakdown';
 import { SpendingTrend } from '@/components/dashboard/spending-trend';
 import type { TrendPoint } from '@/components/dashboard/spending-trend';
-import { SummaryCards } from '@/components/dashboard/summary-cards';
 import type { SpendingSummary } from '@/components/dashboard/summary-cards';
 import { TransactionsTable } from '@/components/dashboard/transactions-table';
 import type { TransactionRow } from '@/components/dashboard/transactions-table';
@@ -26,6 +27,7 @@ export type DashboardProps = {
     trend: TrendPoint[];
     recent_transactions: TransactionRow[];
     largest_transactions: TransactionRow[];
+    cash_flow: CashFlow;
 };
 
 export default function Dashboard({
@@ -38,14 +40,13 @@ export default function Dashboard({
     trend,
     recent_transactions,
     largest_transactions,
+    cash_flow,
 }: DashboardProps) {
     const period = usePage().props.period;
     const [createAccountOpen, setCreateAccountOpen] = useState(false);
-    const hasSpending =
-        summary.total_cents > 0 || summary.transaction_count > 0;
+    const hasSpending = summary.total_cents > 0 || summary.transaction_count > 0;
     const trendHasData = trend.some((point) => point.total_cents > 0);
-    const hasTransactions =
-        recent_transactions.length > 0 || largest_transactions.length > 0;
+    const hasTransactions = recent_transactions.length > 0 || largest_transactions.length > 0;
 
     return (
         <>
@@ -54,18 +55,14 @@ export default function Dashboard({
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-xl font-semibold">Spending</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {period.label}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{period.label}</p>
                     </div>
                 </div>
 
                 {!has_accounts ? (
                     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-12 text-center">
                         <p className="font-medium">No accounts yet</p>
-                        <p className="text-sm text-muted-foreground">
-                            Add an account to start tracking your spending.
-                        </p>
+                        <p className="text-sm text-muted-foreground">Add an account to start tracking your spending.</p>
                         <Button onClick={() => setCreateAccountOpen(true)}>
                             <Plus />
                             Add account
@@ -73,34 +70,23 @@ export default function Dashboard({
                     </div>
                 ) : (
                     <>
-                        {budget && (
-                            <BudgetSummaryCard
-                                budget={budget}
-                                currency={currency}
-                            />
-                        )}
+                        <CashFlowCards cashFlow={cash_flow} currency={currency} />
 
-                        {trendHasData && (
-                            <SpendingTrend trend={trend} currency={currency} />
-                        )}
+                        {budget && <BudgetSummaryCard budget={budget} currency={currency} />}
+
+                        {trendHasData && <SpendingTrend trend={trend} currency={currency} />}
 
                         {hasSpending ? (
                             <>
                                 {categories.length > 0 && (
-                                    <CategoryBreakdown
-                                        categories={categories}
-                                        currency={currency}
-                                    />
+                                    <CategoryBreakdown categories={categories} currency={currency} />
                                 )}
                             </>
                         ) : (
                             <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-dashed p-12 text-center">
-                                <p className="font-medium">
-                                    No spending in this period
-                                </p>
+                                <p className="font-medium">No spending in this period</p>
                                 <p className="text-sm text-muted-foreground">
-                                    Try a different period or import some
-                                    transactions to get started.
+                                    Try a different period or import some transactions to get started.
                                 </p>
                             </div>
                         )}

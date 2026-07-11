@@ -2,6 +2,7 @@
 
 namespace App\Services\Plaid;
 
+use App\Enums\FlowTypeSource;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Merchant;
@@ -9,6 +10,8 @@ use App\Models\MerchantAlias;
 use App\Models\PlaidConnection;
 use App\Models\Transaction;
 use App\Services\Merchants\NameResolver;
+use App\Services\Transactions\FlowTypeClassifier;
+use App\Services\Transactions\TransferPairer;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -22,6 +25,8 @@ class PlaidTransactionSync
     public function __construct(
         private PlaidClient $plaid,
         private NameResolver $nameResolver,
+        private FlowTypeClassifier $flowTypeClassifier,
+        private TransferPairer $transferPairer,
     ) {}
 
     /**
@@ -31,6 +36,7 @@ class PlaidTransactionSync
     public function sync(PlaidConnection $connection): void
     {
         $this->nameResolver->forUser($connection->user_id);
+        $this->flowTypeClassifier->forUser($connection->user_id);
 
         /** @var array<string, Account> $accounts plaid_account_id => Account */
         $accounts = $connection->accounts()
@@ -61,6 +67,10 @@ class PlaidTransactionSync
             $cursor = $batch['next_cursor'];
             $connection->update(['transactions_cursor' => $cursor]);
         } while ($batch['has_more']);
+
+        // Pair transfers once the whole batch has landed: the counterpart leg
+        // may arrive in the same sync, so per-row pairing would miss it.
+        $this->transferPairer->pairForUser($connection->user_id);
     }
 
     /**
@@ -77,19 +87,34 @@ class PlaidTransactionSync
         $categoryName = $plaidTransaction['personal_finance_category']['primary'] ?? null;
         $merchant = $this->resolveMerchant($account->user_id, $rawName, $categoryName);
 
-        Transaction::updateOrCreate(
-            ['import_hash' => $this->hash($plaidTransaction['transaction_id'])],
-            [
-                'account_id' => $account->id,
-                'merchant_id' => $merchant->id,
-                // Plaid uses positive amounts for outflows, matching the app's
-                // "positive = spend" convention; refunds/credits stay negative.
-                'amount_cents' => (int) round(((float) $plaidTransaction['amount']) * 100),
-                'currency' => $plaidTransaction['iso_currency_code'] ?? $account->currency,
-                'description' => $plaidTransaction['name'] ?? $rawName,
-                'posted_at' => $plaidTransaction['authorized_date'] ?? $plaidTransaction['date'],
-            ],
-        );
+        $importHash = $this->hash($plaidTransaction['transaction_id']);
+
+        // Plaid uses positive amounts for outflows, matching the app's
+        // "positive = spend" convention; refunds/credits stay negative.
+        $amountCents = (int) round(((float) $plaidTransaction['amount']) * 100);
+        $description = $plaidTransaction['name'] ?? $rawName;
+
+        $props = [
+            'account_id' => $account->id,
+            'merchant_id' => $merchant->id,
+            'amount_cents' => $amountCents,
+            'currency' => $plaidTransaction['iso_currency_code'] ?? $account->currency,
+            'description' => $description,
+            'posted_at' => $plaidTransaction['authorized_date'] ?? $plaidTransaction['date'],
+        ];
+
+        $existing = Transaction::query()
+            ->where('import_hash', $importHash)
+            ->first();
+
+        // A flow type the user set by hand survives every re-sync; only
+        // automatic classifications are recomputed.
+        if ($existing?->flow_type_source !== FlowTypeSource::User) {
+            $props['flow_type'] = $this->flowTypeClassifier->classify($account, $merchant, $amountCents, $description);
+            $props['flow_type_source'] = FlowTypeSource::Auto;
+        }
+
+        Transaction::updateOrCreate(['import_hash' => $importHash], $props);
     }
 
     /**

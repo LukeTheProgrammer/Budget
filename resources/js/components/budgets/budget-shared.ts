@@ -1,10 +1,7 @@
 import type { BudgetCategoryRow, BudgetStatus, DerivedCategory } from '@/types';
 
 /** Fixed accent semantics for budget status, mapped from the design tokens. */
-export const STATUS_COLOR: Record<
-    BudgetStatus,
-    { fill: string; bg: string; text: string }
-> = {
+export const STATUS_COLOR: Record<BudgetStatus, { fill: string; bg: string; text: string }> = {
     ok: {
         fill: 'oklch(0.58 0.075 158)',
         bg: 'oklch(0.95 0.03 158)',
@@ -30,10 +27,7 @@ export const STATUS_LABEL: Record<BudgetStatus, string> = {
     over: 'Over budget',
 };
 
-export function deriveCategory(
-    row: BudgetCategoryRow,
-    months: number,
-): DerivedCategory {
+export function deriveCategory(row: BudgetCategoryRow, months: number): DerivedCategory {
     const spent = row.actual_cents;
 
     if (row.monthly_budget_cents === null) {
@@ -50,8 +44,7 @@ export function deriveCategory(
 
     const budgeted = row.monthly_budget_cents * months;
     const ratio = budgeted > 0 ? spent / budgeted : 0;
-    const status: BudgetStatus =
-        spent > budgeted ? 'over' : ratio >= 0.85 ? 'warn' : 'ok';
+    const status: BudgetStatus = spent > budgeted ? 'over' : ratio >= 0.85 ? 'warn' : 'ok';
 
     return {
         row,

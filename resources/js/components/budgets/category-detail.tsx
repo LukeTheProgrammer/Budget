@@ -15,7 +15,7 @@ import type {
     MerchantCategory,
     MerchantTag,
 } from '@/types';
-import { ACCENT, STATUS_COLOR, STATUS_LABEL } from './budget-shared';
+import { STATUS_COLOR, STATUS_LABEL } from './budget-shared';
 
 export function CategoryDetail({
     category,
@@ -33,12 +33,9 @@ export function CategoryDetail({
     if (budgeted === null || status === null) {
         return (
             <main className="flex flex-col items-center justify-center gap-3 rounded-xl border bg-card p-12 text-center shadow-sm">
-                <h1 className="text-2xl font-bold -tracking-[0.025em]">
-                    {row.name}
-                </h1>
+                <h1 className="text-2xl font-bold -tracking-[0.025em]">{row.name}</h1>
                 <p className="text-sm text-muted-foreground">
-                    Spent {formatMoney(spent, currency)} this period — no
-                    monthly budget set yet.
+                    Spent {formatMoney(spent, currency)} this period — no monthly budget set yet.
                 </p>
                 <Button type="button" onClick={onEdit}>
                     <Pencil className="size-3.5" /> Set a budget
@@ -72,15 +69,20 @@ export function CategoryDetail({
                     </div>
                 </div>
 
-                <div className="flex justify-end items-start">
-                    <div className="text-[54px] text-end leading-none font-bold tracking-[-0.03em] tabular-nums">
+                <div className="flex items-start justify-end">
+                    <div className="text-end text-[54px] leading-none font-bold tracking-[-0.03em] tabular-nums">
                         {formatMoney(spent, currency)}
                     </div>
                 </div>
             </div>
 
             <div className="mt-6">
-                <CategoryDetailBar budgetPercent={budgetPct} pacePercent={pacePos} isOver={over} overPercent={overPct} />
+                <CategoryDetailBar
+                    budgetPercent={budgetPct}
+                    pacePercent={pacePos}
+                    isOver={over}
+                    overPercent={overPct}
+                />
 
                 <div className="mt-2 flex justify-between font-mono text-[11.5px] text-muted-foreground">
                     <span>{formatMoney(0, currency)}</span>
@@ -96,10 +98,7 @@ export function CategoryDetail({
                 />
             )}
 
-            <RecentTransactions
-                transactions={row.recent_transactions}
-                currency={currency}
-            />
+            <RecentTransactions transactions={row.recent_transactions} currency={currency} />
         </main>
     );
 }
@@ -110,17 +109,7 @@ type EditingMerchant = {
     availableCategories: MerchantCategory[];
 };
 
-function StatusBadge({
-    status,
-    bg,
-    text,
-    fill,
-}: {
-    status: string;
-    bg: string;
-    text: string;
-    fill: string;
-}) {
+function StatusBadge({ status, bg, text, fill }: { status: string; bg: string; text: string; fill: string }) {
     return (
         <span
             className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[12.5px] font-semibold"
@@ -129,25 +118,14 @@ function StatusBadge({
                 color: text,
             }}
         >
-            <span
-                className="size-1.75 rounded-full"
-                style={{ backgroundColor: fill }}
-            />
+            <span className="size-1.75 rounded-full" style={{ backgroundColor: fill }} />
             {status}
         </span>
     );
 }
 
-function RecentTransactions({
-    transactions,
-    currency,
-}: {
-    transactions: BudgetTransaction[];
-    currency: string;
-}) {
-    const sortedTransactions = [...transactions].sort(
-        (a, b) => b.amount_cents - a.amount_cents,
-    );
+function RecentTransactions({ transactions, currency }: { transactions: BudgetTransaction[]; currency: string }) {
+    const sortedTransactions = [...transactions].sort((a, b) => b.amount_cents - a.amount_cents);
 
     const [editing, setEditing] = useState<EditingMerchant | null>(null);
 
@@ -194,9 +172,7 @@ function RecentTransactions({
             </div>
 
             {sortedTransactions.length === 0 ? (
-                <p className="mt-3 text-sm text-muted-foreground">
-                    No transactions in this category yet.
-                </p>
+                <p className="mt-3 text-sm text-muted-foreground">No transactions in this category yet.</p>
             ) : (
                 <table className="mt-3 w-full text-sm">
                     <thead>
@@ -204,17 +180,12 @@ function RecentTransactions({
                             <th className="py-2 pr-3 font-medium">Date</th>
                             <th className="py-2 pr-3 font-medium">Merchant</th>
                             <th className="py-2 pr-3 font-medium">&nbsp;</th>
-                            <th className="py-2 pl-3 text-right font-medium">
-                                Amount
-                            </th>
+                            <th className="py-2 pl-3 text-right font-medium">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
                         {sortedTransactions.map((transaction) => (
-                            <tr
-                                key={transaction.id}
-                                className="border-b last:border-0"
-                            >
+                            <tr key={transaction.id} className="border-b last:border-0">
                                 <td className="py-2.5 pr-3 whitespace-nowrap text-muted-foreground tabular-nums">
                                     {formatDate(transaction.posted_at)}
                                 </td>
@@ -222,20 +193,14 @@ function RecentTransactions({
                                     {transaction.merchant_id !== null ? (
                                         <button
                                             type="button"
-                                            onClick={() =>
-                                                loadMerchant(
-                                                    transaction.merchant_id!,
-                                                )
-                                            }
+                                            onClick={() => loadMerchant(transaction.merchant_id!)}
                                             className="truncate font-medium hover:underline"
                                         >
-                                            {transaction.merchant_name ??
-                                                'Unknown merchant'}
+                                            {transaction.merchant_name ?? 'Unknown merchant'}
                                         </button>
                                     ) : (
                                         <div className="truncate font-medium">
-                                            {transaction.merchant_name ??
-                                                'Unknown merchant'}
+                                            {transaction.merchant_name ?? 'Unknown merchant'}
                                         </div>
                                     )}
                                 </td>
@@ -247,10 +212,7 @@ function RecentTransactions({
                                     )}
                                 </td>
                                 <td className="py-2.5 pl-3 text-right font-semibold tabular-nums">
-                                    {formatMoney(
-                                        transaction.amount_cents,
-                                        currency,
-                                    )}
+                                    {formatMoney(transaction.amount_cents, currency)}
                                 </td>
                             </tr>
                         ))}

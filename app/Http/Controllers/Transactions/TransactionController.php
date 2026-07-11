@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Transactions;
 
+use App\Enums\FlowType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Transactions\TransactionFilterRequest;
 use App\Models\Account;
@@ -43,6 +44,7 @@ class TransactionController extends Controller
             'category_options' => $this->categoryOptions($userId),
             'available_tags' => $this->availableTags(),
             'currency' => $this->currencyFor($userId),
+            'flow_type_options' => FlowType::options(),
         ]);
     }
 
@@ -50,7 +52,7 @@ class TransactionController extends Controller
      * Map the paginated transactions to the table's display row shape.
      *
      * @param  LengthAwarePaginator<int, Transaction>  $transactions
-     * @return list<array{id: int, posted_at: string, merchant_label: string, category_name: string|null, description: string|null, amount_cents: int, currency: string, tags: list<array{slug: string, name: string}>}>
+     * @return list<array{id: int, posted_at: string, merchant_label: string, category_name: string|null, description: string|null, amount_cents: int, currency: string, flow_type: string, flow_type_source: string, is_paired_transfer: bool, tags: list<array{slug: string, name: string}>}>
      */
     private function transactionRows(LengthAwarePaginator $transactions): array
     {
@@ -63,6 +65,9 @@ class TransactionController extends Controller
                 'description' => $transaction->description,
                 'amount_cents' => $transaction->amount_cents,
                 'currency' => $transaction->currency,
+                'flow_type' => $transaction->flow_type->value,
+                'flow_type_source' => $transaction->flow_type_source->value,
+                'is_paired_transfer' => $transaction->transfer_pair_id !== null,
                 'tags' => $transaction->tags
                     ->map(fn (Tag $tag): array => ['slug' => $tag->slug, 'name' => $tag->name])
                     ->all(),

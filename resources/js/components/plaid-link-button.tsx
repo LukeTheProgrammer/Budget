@@ -1,10 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useCallback, useEffect, useState } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
-import type {
-    PlaidLinkOnSuccess,
-    PlaidLinkOnSuccessMetadata,
-} from 'react-plaid-link';
+import type { PlaidLinkOnSuccess, PlaidLinkOnSuccessMetadata } from 'react-plaid-link';
 import { Button } from '@/components/ui/button';
 import { exchange, linkToken, sync } from '@/routes/plaid';
 
@@ -24,10 +21,7 @@ function readCookie(name: string): string | null {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
-export default function PlaidLinkButton({
-    connectionId,
-    label = 'Link a bank',
-}: PlaidLinkButtonProps) {
+export default function PlaidLinkButton({ connectionId, label = 'Link a bank' }: PlaidLinkButtonProps) {
     const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -41,8 +35,7 @@ export default function PlaidLinkButton({
                 router.post(exchange().url, {
                     public_token: publicToken,
                     institution: {
-                        institution_id:
-                            metadata.institution?.institution_id ?? null,
+                        institution_id: metadata.institution?.institution_id ?? null,
                         name: metadata.institution?.name ?? null,
                     },
                 });
@@ -78,9 +71,7 @@ export default function PlaidLinkButton({
                     Accept: 'application/json',
                     'X-XSRF-TOKEN': readCookie('XSRF-TOKEN') ?? '',
                 },
-                body: JSON.stringify(
-                    connectionId ? { connection: connectionId } : {},
-                ),
+                body: JSON.stringify(connectionId ? { connection: connectionId } : {}),
             });
 
             const data: { link_token: string } = await response.json();

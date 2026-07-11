@@ -3,20 +3,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { formatMoney } from '@/lib/format';
 import type { BudgetSummary } from '@/types';
 
-export function BudgetSummaryCard({
-    budget,
-    currency,
-}: {
-    budget: BudgetSummary;
-    currency: string;
-}) {
+export function BudgetSummaryCard({ budget, currency }: { budget: BudgetSummary; currency: string }) {
     const overBudget = budget.remaining_cents < 0;
     // When over budget the bar represents total spend, so the budgeted portion
     // is shown as the accent fill and the overage as a trailing red segment.
     // Otherwise the accent fill simply tracks spend against the budget.
-    const budgetPercent = overBudget
-        ? (budget.budgeted_cents / budget.spent_cents) * 100
-        : (budget.percent ?? 0);
+    const budgetPercent = overBudget ? (budget.budgeted_cents / budget.spent_cents) * 100 : (budget.percent ?? 0);
     const overPercent = overBudget ? 100 - budgetPercent : 0;
 
     return (

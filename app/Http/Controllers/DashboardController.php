@@ -43,7 +43,28 @@ class DashboardController extends Controller
             'largest_transactions' => $this->transactionRows(
                 Transaction::query()->largestSpending($userId, $start, $end)->get()
             ),
+            'cash_flow' => $this->cashFlow($userId, $start, $end, $summary['total_cents']),
         ]);
+    }
+
+    /**
+     * What came in, what went out, and what is left for the period. Transfers
+     * between the user's own accounts are money that was never earned or spent,
+     * so they move none of the three figures.
+     *
+     * @return array{income_cents: int, spending_cents: int, net_cents: int}
+     */
+    private function cashFlow(int $userId, Carbon $start, Carbon $end, int $spendingCents): array
+    {
+        $income = (int) Transaction::query()
+            ->incomeSummary($userId, $start, $end)
+            ->value('total_cents');
+
+        return [
+            'income_cents' => $income,
+            'spending_cents' => $spendingCents,
+            'net_cents' => $income - $spendingCents,
+        ];
     }
 
     /**

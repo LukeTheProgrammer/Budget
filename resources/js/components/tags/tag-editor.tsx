@@ -1,19 +1,8 @@
 import { PlusIcon, Trash2Icon, XIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export type Tag = {
     slug: string;
@@ -40,21 +29,12 @@ type TagEditorProps = {
  * entry to create a tag on the fly. The caller owns persistence via onAdd /
  * onRemove.
  */
-export function TagEditor({
-    tags,
-    availableTags,
-    onAdd,
-    onRemove,
-    onDelete,
-    addLabel = 'Tag',
-}: TagEditorProps) {
+export function TagEditor({ tags, availableTags, onAdd, onRemove, onDelete, addLabel = 'Tag' }: TagEditorProps) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
 
     const appliedSlugs = new Set(tags.map((tag) => tag.slug));
-    const suggestions = availableTags.filter(
-        (tag) => !appliedSlugs.has(tag.slug),
-    );
+    const suggestions = availableTags.filter((tag) => !appliedSlugs.has(tag.slug));
 
     const addTag = (value: string) => {
         const name = value.trim();
@@ -123,9 +103,7 @@ export function TagEditor({
                                             onSelect={() => addTag(tag.name)}
                                             className="group"
                                         >
-                                            <span className="flex-1">
-                                                {tag.name}
-                                            </span>
+                                            <span className="flex-1">{tag.name}</span>
                                             {onDelete && (
                                                 <button
                                                     type="button"

@@ -17,9 +17,7 @@ export function TotalsBar({
     // When over budget the bar represents total spend, so the budgeted portion
     // is shown in green and the overage as a trailing red segment. Otherwise the
     // green fill simply tracks spend against the budget.
-    const budgetPct = over
-        ? (totals.budgeted / totals.spent) * 100
-        : totals.percent;
+    const budgetPct = over ? (totals.budgeted / totals.spent) * 100 : totals.percent;
     const overPct = over ? 100 - budgetPct : 0;
 
     return (
@@ -44,15 +42,11 @@ export function TotalsBar({
             </div>
             <div className="mt-1.5 flex justify-between text-[14px] text-muted-foreground">
                 <span>
-                    {formatMoney(totals.spent, currency, true)} /{' '}
-                    {formatMoney(totals.budgeted, currency, true)}
+                    {formatMoney(totals.spent, currency, true)} / {formatMoney(totals.budgeted, currency, true)}
                 </span>
                 <span className="flex items-center gap-2">
                     {over && (
-                        <span
-                            className="font-medium"
-                            style={{ color: STATUS_COLOR.over.text }}
-                        >
+                        <span className="font-medium" style={{ color: STATUS_COLOR.over.text }}>
                             {formatMoney(-totals.remaining, currency)} over
                         </span>
                     )}

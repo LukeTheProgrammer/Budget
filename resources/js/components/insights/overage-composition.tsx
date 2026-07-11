@@ -22,9 +22,7 @@ export function OverageComposition({
                     <span className="font-mono text-3xl font-medium text-destructive tabular-nums">
                         {formatSignedMoney(totalCents, currency)}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                        total overage
-                    </span>
+                    <span className="text-xs text-muted-foreground">total overage</span>
                 </div>
 
                 <div className="mt-4 flex h-7 overflow-hidden rounded-lg ring-1 ring-border ring-inset">

@@ -2,6 +2,7 @@
 
 namespace App\Services\Transactions;
 
+use App\Enums\FlowTypeSource;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Merchant;
@@ -22,15 +23,32 @@ use Illuminate\Support\Facades\DB;
  */
 class TransactionRowStore
 {
-    public function __construct(private NameResolver $nameResolver) {}
+    public function __construct(
+        private NameResolver $nameResolver,
+        private FlowTypeClassifier $flowTypeClassifier,
+        private TransferPairer $transferPairer,
+    ) {}
 
     /**
-     * Prime the merchant resolver for a user. Convenience pass-through so
-     * callers do not need to depend on NameResolver directly.
+     * Prime the merchant resolver and flow-type classifier for a user.
+     * Convenience pass-through so callers do not need to depend on either
+     * collaborator directly.
      */
     public function forUser(int $userId): void
     {
         $this->nameResolver->forUser($userId);
+        $this->flowTypeClassifier->forUser($userId);
+    }
+
+    /**
+     * Close out an import run: pair up the two legs of any internal transfers
+     * the batch produced. Callers MUST invoke this once every row is stored,
+     * because a transfer's counterpart leg may only appear later in the file
+     * (or in a file imported earlier) and cannot be matched row by row.
+     */
+    public function finish(int $userId): void
+    {
+        $this->transferPairer->pairForUser($userId);
     }
 
     /**
@@ -62,6 +80,22 @@ class TransactionRowStore
             'posted_at' => $row->postedAt,
             'import_hash' => $importHash,
         ];
+
+        $existing = Transaction::query()
+            ->where('import_hash', $importHash)
+            ->first();
+
+        // A flow type the user set by hand outlives any re-import of the same
+        // row; only automatic classifications are recomputed.
+        if ($existing?->flow_type_source !== FlowTypeSource::User) {
+            $transactionProps['flow_type'] = $this->flowTypeClassifier->classify(
+                $account,
+                $merchant,
+                $row->amountCents,
+                $row->description,
+            );
+            $transactionProps['flow_type_source'] = FlowTypeSource::Auto;
+        }
 
         $transaction = Transaction::updateOrCreate(
             ['import_hash' => $importHash],

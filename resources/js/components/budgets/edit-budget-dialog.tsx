@@ -86,11 +86,7 @@ function EditBudgetForm({
     const ratio = budgeted > 0 ? category.actual_cents / budgeted : 0;
     const percent = Math.round(ratio * 100);
     const status: BudgetStatus =
-        budgeted > 0 && category.actual_cents > budgeted
-            ? 'over'
-            : ratio >= 0.85
-              ? 'warn'
-              : 'ok';
+        budgeted > 0 && category.actual_cents > budgeted ? 'over' : ratio >= 0.85 ? 'warn' : 'ok';
     const color = STATUS_COLOR[status];
 
     function submit(event: React.FormEvent<HTMLFormElement>): void {
@@ -125,16 +121,12 @@ function EditBudgetForm({
                 </span>
                 <div className="text-left">
                     <DialogTitle>Edit · {category.name}</DialogTitle>
-                    <DialogDescription>
-                        Set the recurring monthly budget for this category.
-                    </DialogDescription>
+                    <DialogDescription>Set the recurring monthly budget for this category.</DialogDescription>
                 </div>
             </DialogHeader>
 
             <div className="space-y-2">
-                <Label htmlFor="edit-budget-amount">
-                    Monthly budget ({currency})
-                </Label>
+                <Label htmlFor="edit-budget-amount">Monthly budget ({currency})</Label>
                 <Input
                     id="edit-budget-amount"
                     type="number"
@@ -147,10 +139,7 @@ function EditBudgetForm({
                     onChange={(event) => setData('amount', event.target.value)}
                 />
                 <div className="flex justify-between text-[11.5px] text-muted-foreground">
-                    <span>
-                        Spent so far:{' '}
-                        {formatMoney(category.actual_cents, currency)}
-                    </span>
+                    <span>Spent so far: {formatMoney(category.actual_cents, currency)}</span>
                     {budgeted > 0 && <span>{percent}% used</span>}
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-muted ring-1 ring-border ring-inset">
@@ -164,9 +153,7 @@ function EditBudgetForm({
                         />
                     )}
                 </div>
-                <p className="text-[11.5px] text-muted-foreground">
-                    Leave blank to clear the budget.
-                </p>
+                <p className="text-[11.5px] text-muted-foreground">Leave blank to clear the budget.</p>
             </div>
 
             <DialogFooter>

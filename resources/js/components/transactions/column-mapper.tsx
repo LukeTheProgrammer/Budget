@@ -1,29 +1,11 @@
 import { useMemo } from 'react';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader } from '../ui/card';
 
-export type FieldKey =
-    | 'posted_at'
-    | 'amount'
-    | 'description'
-    | 'currency'
-    | 'category';
+export type FieldKey = 'posted_at' | 'amount' | 'description' | 'currency' | 'category';
 
 export type ColumnMapping = {
     fields: Record<FieldKey, string>;
@@ -67,13 +49,7 @@ type ColumnMapperProps = {
     errors: Partial<Record<string, string>>;
 };
 
-export function ColumnMapper({
-    headers,
-    previewRows,
-    mapping,
-    onChange,
-    errors,
-}: ColumnMapperProps) {
+export function ColumnMapper({ headers, previewRows, mapping, onChange, errors }: ColumnMapperProps) {
     function setField(key: FieldKey, header: string): void {
         onChange({
             ...mapping,
@@ -93,17 +69,10 @@ export function ColumnMapper({
             }
         }
 
-        return new Set(
-            [...counts.entries()]
-                .filter(([, count]) => count > 1)
-                .map(([header]) => header),
-        );
+        return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([header]) => header));
     }, [mapping.fields]);
 
-    function fieldMessage(
-        key: FieldKey,
-        required: boolean,
-    ): string | undefined {
+    function fieldMessage(key: FieldKey, required: boolean): string | undefined {
         const header = mapping.fields[key];
 
         if (required && header === '') {
@@ -120,44 +89,27 @@ export function ColumnMapper({
     return (
         <>
             <Card>
-                <CardHeader>
-                    Field Mapping
-                </CardHeader>
+                <CardHeader>Field Mapping</CardHeader>
                 <CardContent>
                     <div className="space-y-6">
                         <div className="">
                             {FIELDS.map(({ key, label, required }) => (
-                                <div key={key} className="space-y-2 w-full">
+                                <div key={key} className="w-full space-y-2">
                                     <Label htmlFor={`field-${key}`}>
                                         {label}
-                                        {required && (
-                                            <span className="text-red-600"> *</span>
-                                        )}
+                                        {required && <span className="text-red-600"> *</span>}
                                     </Label>
                                     <Select
-                                        value={
-                                            mapping.fields[key] === ''
-                                                ? UNMAPPED
-                                                : mapping.fields[key]
-                                        }
-                                        onValueChange={(value) =>
-                                            setField(key, value === UNMAPPED ? '' : value)
-                                        }
+                                        value={mapping.fields[key] === '' ? UNMAPPED : mapping.fields[key]}
+                                        onValueChange={(value) => setField(key, value === UNMAPPED ? '' : value)}
                                     >
                                         <SelectTrigger id={`field-${key}`} className="w-full">
                                             <SelectValue placeholder="Select a column" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {!required && (
-                                                <SelectItem value={UNMAPPED}>
-                                                    Not mapped
-                                                </SelectItem>
-                                            )}
+                                            {!required && <SelectItem value={UNMAPPED}>Not mapped</SelectItem>}
                                             {headers.map((header, position) => (
-                                                <SelectItem
-                                                    key={`${header}-${position}`}
-                                                    value={header}
-                                                >
+                                                <SelectItem key={`${header}-${position}`} value={header}>
                                                     {header}
                                                 </SelectItem>
                                             ))}
@@ -185,17 +137,12 @@ export function ColumnMapper({
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="as_is">
-                            Positive values are purchases
-                        </SelectItem>
-                        <SelectItem value="invert">
-                            Negative values are purchases (invert)
-                        </SelectItem>
+                        <SelectItem value="as_is">Positive values are purchases</SelectItem>
+                        <SelectItem value="invert">Negative values are purchases (invert)</SelectItem>
                     </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
-                    Choose “invert” for exports (like Chase) that sign purchases
-                    negative.
+                    Choose “invert” for exports (like Chase) that sign purchases negative.
                 </p>
             </div>
 
@@ -216,16 +163,11 @@ export function ColumnMapper({
                                     <TableRow key={rowIndex}>
                                         {FIELDS.map(({ key }) => {
                                             const header = mapping.fields[key];
-                                            const position =
-                                                header === ''
-                                                    ? -1
-                                                    : headers.indexOf(header);
+                                            const position = header === '' ? -1 : headers.indexOf(header);
 
                                             return (
                                                 <TableCell key={key}>
-                                                    {position >= 0
-                                                        ? (row[position] ?? '')
-                                                        : ''}
+                                                    {position >= 0 ? (row[position] ?? '') : ''}
                                                 </TableCell>
                                             );
                                         })}
@@ -248,9 +190,7 @@ export function suggestMapping(headers: string[]): ColumnMapping {
     const lower = headers.map((header) => header.toLowerCase());
 
     const match = (patterns: string[]): string => {
-        const position = lower.findIndex((header) =>
-            patterns.some((pattern) => header.includes(pattern)),
-        );
+        const position = lower.findIndex((header) => patterns.some((pattern) => header.includes(pattern)));
 
         return position >= 0 ? headers[position] : '';
     };

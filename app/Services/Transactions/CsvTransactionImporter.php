@@ -84,6 +84,8 @@ class CsvTransactionImporter
         // Release the file handle before moving the file on disk.
         unset($file);
 
+        $this->rowStore->finish($account->user_id);
+
         $this->archiveFile($relativePath, $result);
 
         return $result;

@@ -14,10 +14,7 @@ export function SpendingChanges({
     currentLabel: string;
     currency: string;
 }) {
-    const maxChange = Math.max(
-        1,
-        ...changes.rows.map((row) => Math.abs(row.change_cents)),
-    );
+    const maxChange = Math.max(1, ...changes.rows.map((row) => Math.abs(row.change_cents)));
 
     return (
         <Card>
@@ -34,47 +31,25 @@ export function SpendingChanges({
                         <table className="w-full text-sm">
                             <thead className="text-muted-foreground">
                                 <tr className="border-b">
-                                    <th className="py-2 text-left font-medium">
-                                        Category
-                                    </th>
-                                    <th className="py-2 text-right font-medium">
-                                        {previousLabel}
-                                    </th>
-                                    <th className="py-2 text-right font-medium">
-                                        {currentLabel}
-                                    </th>
-                                    <th className="py-2 text-right font-medium">
-                                        Change
-                                    </th>
+                                    <th className="py-2 text-left font-medium">Category</th>
+                                    <th className="py-2 text-right font-medium">{previousLabel}</th>
+                                    <th className="py-2 text-right font-medium">{currentLabel}</th>
+                                    <th className="py-2 text-right font-medium">Change</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {changes.rows.map((row) => {
                                     const up = row.change_cents > 0;
-                                    const barWidth =
-                                        (Math.abs(row.change_cents) /
-                                            maxChange) *
-                                        50;
+                                    const barWidth = (Math.abs(row.change_cents) / maxChange) * 50;
 
                                     return (
-                                        <tr
-                                            key={row.name}
-                                            className="border-b last:border-0"
-                                        >
-                                            <td className="py-3 font-semibold">
-                                                {row.name}
-                                            </td>
+                                        <tr key={row.name} className="border-b last:border-0">
+                                            <td className="py-3 font-semibold">{row.name}</td>
                                             <td className="py-3 text-right font-mono text-muted-foreground tabular-nums">
-                                                {formatMoney(
-                                                    row.previous_cents,
-                                                    currency,
-                                                )}
+                                                {formatMoney(row.previous_cents, currency)}
                                             </td>
                                             <td className="py-3 text-right font-mono tabular-nums">
-                                                {formatMoney(
-                                                    row.current_cents,
-                                                    currency,
-                                                )}
+                                                {formatMoney(row.current_cents, currency)}
                                             </td>
                                             <td className="py-3">
                                                 <div className="flex items-center justify-end gap-3">
@@ -100,11 +75,7 @@ export function SpendingChanges({
                                                                 : 'text-emerald-600 dark:text-emerald-400',
                                                         )}
                                                     >
-                                                        {up ? '▲' : '▼'}{' '}
-                                                        {formatSignedMoney(
-                                                            row.change_cents,
-                                                            currency,
-                                                        )}
+                                                        {up ? '▲' : '▼'} {formatSignedMoney(row.change_cents, currency)}
                                                     </span>
                                                 </div>
                                             </td>
@@ -117,19 +88,13 @@ export function SpendingChanges({
                             <span>
                                 Increases{' '}
                                 <b className="font-mono text-destructive">
-                                    {formatSignedMoney(
-                                        changes.increases_cents,
-                                        currency,
-                                    )}
+                                    {formatSignedMoney(changes.increases_cents, currency)}
                                 </b>
                             </span>
                             <span>
                                 Decreases{' '}
                                 <b className="font-mono text-emerald-600 dark:text-emerald-400">
-                                    {formatSignedMoney(
-                                        changes.decreases_cents,
-                                        currency,
-                                    )}
+                                    {formatSignedMoney(changes.decreases_cents, currency)}
                                 </b>
                             </span>
                             <span>
@@ -142,10 +107,7 @@ export function SpendingChanges({
                                             : 'text-emerald-600 dark:text-emerald-400',
                                     )}
                                 >
-                                    {formatSignedMoney(
-                                        changes.net_cents,
-                                        currency,
-                                    )}
+                                    {formatSignedMoney(changes.net_cents, currency)}
                                 </b>
                             </span>
                         </div>

@@ -2,12 +2,14 @@
 
 namespace App\Http\Requests\Transactions;
 
+use App\Enums\FlowType;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Merchant;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class TransactionFilterRequest extends FormRequest
 {
@@ -44,6 +46,7 @@ class TransactionFilterRequest extends FormRequest
             ),
             'min_amount' => $this->sanitizeAmount($this->input('min_amount')),
             'max_amount' => $this->sanitizeAmount($this->input('max_amount')),
+            'flow_type' => $this->sanitizeFlowTypes($this->input('flow_type')),
         ]);
     }
 
@@ -62,6 +65,8 @@ class TransactionFilterRequest extends FormRequest
             'category_id' => ['nullable', 'integer'],
             'min_amount' => ['nullable', 'numeric', 'min:0'],
             'max_amount' => ['nullable', 'numeric', 'min:0'],
+            'flow_type' => ['nullable', 'array'],
+            'flow_type.*' => [Rule::enum(FlowType::class)],
             'page' => ['nullable', 'integer', 'min:1'],
         ];
     }
@@ -71,7 +76,7 @@ class TransactionFilterRequest extends FormRequest
      * converted from major units (dollars) to integer cents; only keys with a
      * provided value are present.
      *
-     * @return array{start?: string, end?: string, account_id?: int, merchant_id?: int, category_id?: int, min_amount_cents?: int, max_amount_cents?: int}
+     * @return array{start?: string, end?: string, account_id?: int, merchant_id?: int, category_id?: int, min_amount_cents?: int, max_amount_cents?: int, flow_types?: list<string>}
      */
     public function filters(): array
     {
@@ -105,6 +110,12 @@ class TransactionFilterRequest extends FormRequest
             $filters['max_amount_cents'] = (int) round((float) $this->input('max_amount') * 100);
         }
 
+        $flowTypes = $this->sanitizeFlowTypes($this->input('flow_type'));
+
+        if ($flowTypes !== null) {
+            $filters['flow_types'] = $flowTypes;
+        }
+
         return $filters;
     }
 
@@ -112,11 +123,12 @@ class TransactionFilterRequest extends FormRequest
      * The filters echoed back to the page in the units the user supplied, so
      * the controls can re-hydrate exactly (FR-011).
      *
-     * @return array{start: string|null, end: string|null, account_id: int|null, merchant_id: int|null, category_id: int|null, min_amount: float|null, max_amount: float|null}
+     * @return array{start: string|null, end: string|null, account_id: int|null, merchant_id: int|null, category_id: int|null, min_amount: float|null, max_amount: float|null, flow_type: list<string>}
      */
     public function echoedFilters(): array
     {
         return [
+            'flow_type' => $this->sanitizeFlowTypes($this->input('flow_type')) ?? [],
             'start' => $this->filled('start') ? $this->date('start')->toDateString() : null,
             'end' => $this->filled('end') ? $this->date('end')->toDateString() : null,
             'account_id' => $this->filled('account_id') ? $this->integer('account_id') : null,
@@ -125,6 +137,30 @@ class TransactionFilterRequest extends FormRequest
             'min_amount' => $this->filled('min_amount') ? (float) $this->input('min_amount') : null,
             'max_amount' => $this->filled('max_amount') ? (float) $this->input('max_amount') : null,
         ];
+    }
+
+    /**
+     * Return the valid flow-type values from the input, or null when none were
+     * supplied. Unknown values are dropped rather than rejected, matching how
+     * every other filter on this request sanitizes instead of failing.
+     *
+     * @return list<string>|null
+     */
+    private function sanitizeFlowTypes(mixed $value): ?array
+    {
+        if (! is_array($value)) {
+            return null;
+        }
+
+        $valid = array_values(array_filter(
+            array_map(fn (mixed $item): ?FlowType => is_string($item) ? FlowType::tryFrom($item) : null, $value),
+        ));
+
+        if ($valid === []) {
+            return null;
+        }
+
+        return array_map(fn (FlowType $type): string => $type->value, $valid);
     }
 
     /**

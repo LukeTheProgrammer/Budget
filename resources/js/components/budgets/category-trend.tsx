@@ -1,13 +1,6 @@
 import { Bar, BarChart, CartesianGrid, ReferenceLine, XAxis } from 'recharts';
-import {
-    ReferenceLineLabel,
-    useIsHydrated,
-} from '@/components/dashboard/spending-trend';
-import {
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-} from '@/components/ui/chart';
+import { ReferenceLineLabel, useIsHydrated } from '@/components/dashboard/spending-trend';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import type { ChartConfig } from '@/components/ui/chart';
 import { formatMoney } from '@/lib/format';
 import type { CategoryTrendPoint } from '@/types/budget';
@@ -46,41 +39,23 @@ export function CategoryTrend({
             {!isHydrated ? (
                 <div className="mt-3 h-[260px] w-full" />
             ) : (
-                <ChartContainer
-                    config={chartConfig}
-                    className="mt-3 max-h-[260px] w-full"
-                >
+                <ChartContainer config={chartConfig} className="mt-3 max-h-[260px] w-full">
                     <BarChart data={trend} accessibilityLayer>
                         <CartesianGrid vertical={false} />
-                        <XAxis
-                            dataKey="label"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                        />
+                        <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
                         <ChartTooltip
                             content={
                                 <ChartTooltipContent
                                     labelKey="month"
-                                    formatter={(value) =>
-                                        formatMoney(Number(value), currency)
-                                    }
+                                    formatter={(value) => formatMoney(Number(value), currency)}
                                 />
                             }
                         />
-                        <Bar
-                            dataKey="total_cents"
-                            fill="var(--color-total_cents)"
-                            radius={4}
-                        />
+                        <Bar dataKey="total_cents" fill="var(--color-total_cents)" radius={4} />
                         <ReferenceLine
                             y={budgetCents}
                             stroke="#27272a"
-                            label={
-                                <ReferenceLineLabel
-                                    text={`Budget ${formatMoney(budgetCents, currency, true)}`}
-                                />
-                            }
+                            label={<ReferenceLineLabel text={`Budget ${formatMoney(budgetCents, currency, true)}`} />}
                         />
                     </BarChart>
                 </ChartContainer>

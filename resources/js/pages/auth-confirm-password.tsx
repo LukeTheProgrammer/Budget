@@ -43,11 +43,7 @@ export default function ConfirmPassword() {
                         </div>
 
                         <div className="flex items-center">
-                            <Button
-                                className="w-full"
-                                disabled={processing}
-                                data-test="confirm-password-button"
-                            >
+                            <Button className="w-full" disabled={processing} data-test="confirm-password-button">
                                 {processing && <Spinner />}
                                 Confirm password
                             </Button>
@@ -61,6 +57,5 @@ export default function ConfirmPassword() {
 
 ConfirmPassword.layout = {
     title: 'Confirm password',
-    description:
-        'This is a secure area of the application. Please confirm your password before continuing.',
+    description: 'This is a secure area of the application. Please confirm your password before continuing.',
 };

@@ -64,6 +64,8 @@ class MappedCsvImporter
             }
         }
 
+        $this->rowStore->finish($account->user_id);
+
         return $result;
     }
 

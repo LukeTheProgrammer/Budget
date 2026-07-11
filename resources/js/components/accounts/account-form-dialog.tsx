@@ -12,13 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { store, update } from '@/routes/accounts';
 import type { AccountListItem, AccountTypeOption } from '@/types/accounts';
 
@@ -37,12 +31,7 @@ type AccountFormDialogProps = {
     accountTypes: AccountTypeOption[];
 };
 
-export function AccountFormDialog({
-    open,
-    onClose,
-    account,
-    accountTypes,
-}: AccountFormDialogProps) {
+export function AccountFormDialog({ open, onClose, account, accountTypes }: AccountFormDialogProps) {
     return (
         <Dialog
             open={open}
@@ -99,9 +88,7 @@ function AccountForm({
     return (
         <form onSubmit={submit} className="space-y-5">
             <DialogHeader>
-                <DialogTitle>
-                    {isEditing ? 'Edit account' : 'Add account'}
-                </DialogTitle>
+                <DialogTitle>{isEditing ? 'Edit account' : 'Add account'}</DialogTitle>
                 <DialogDescription>
                     {isLinked
                         ? 'This account is linked to a bank. You can rename it; other details sync automatically.'
@@ -127,9 +114,7 @@ function AccountForm({
                         <Label htmlFor="type">Type</Label>
                         <Select
                             value={data.type === '' ? NO_TYPE : data.type}
-                            onValueChange={(value) =>
-                                setData('type', value === NO_TYPE ? '' : value)
-                            }
+                            onValueChange={(value) => setData('type', value === NO_TYPE ? '' : value)}
                         >
                             <SelectTrigger id="type">
                                 <SelectValue placeholder="No type" />
@@ -137,10 +122,7 @@ function AccountForm({
                             <SelectContent>
                                 <SelectItem value={NO_TYPE}>No type</SelectItem>
                                 {accountTypes.map((option) => (
-                                    <SelectItem
-                                        key={option.value}
-                                        value={option.value}
-                                    >
+                                    <SelectItem key={option.value} value={option.value}>
                                         {option.label}
                                     </SelectItem>
                                 ))}
@@ -155,12 +137,7 @@ function AccountForm({
                             <Input
                                 id="currency"
                                 value={data.currency}
-                                onChange={(event) =>
-                                    setData(
-                                        'currency',
-                                        event.target.value.toUpperCase(),
-                                    )
-                                }
+                                onChange={(event) => setData('currency', event.target.value.toUpperCase())}
                                 maxLength={3}
                             />
                             <InputError message={errors.currency} />
@@ -171,9 +148,7 @@ function AccountForm({
                             <Input
                                 id="last_four"
                                 value={data.last_four}
-                                onChange={(event) =>
-                                    setData('last_four', event.target.value)
-                                }
+                                onChange={(event) => setData('last_four', event.target.value)}
                                 inputMode="numeric"
                                 maxLength={4}
                             />
@@ -186,9 +161,7 @@ function AccountForm({
                         <Input
                             id="balance"
                             value={data.balance}
-                            onChange={(event) =>
-                                setData('balance', event.target.value)
-                            }
+                            onChange={(event) => setData('balance', event.target.value)}
                             inputMode="decimal"
                             placeholder="0.00"
                         />

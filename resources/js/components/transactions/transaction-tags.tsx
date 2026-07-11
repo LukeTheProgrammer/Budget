@@ -16,11 +16,7 @@ type TransactionTagsProps = {
  * Tag editor for a single transaction, persisting changes through the
  * transaction tag endpoints.
  */
-export function TransactionTags({
-    transactionId,
-    tags,
-    availableTags,
-}: TransactionTagsProps) {
+export function TransactionTags({ transactionId, tags, availableTags }: TransactionTagsProps) {
     const addTag = (name: string) => {
         router.post(
             TransactionTagController.store.url(transactionId),
@@ -30,10 +26,10 @@ export function TransactionTags({
     };
 
     const removeTag = (slug: string) => {
-        router.delete(
-            TransactionTagController.destroy.url([transactionId, slug]),
-            { preserveScroll: true, preserveState: true },
-        );
+        router.delete(TransactionTagController.destroy.url([transactionId, slug]), {
+            preserveScroll: true,
+            preserveState: true,
+        });
     };
 
     const deleteTag = (slug: string) => {
@@ -44,12 +40,6 @@ export function TransactionTags({
     };
 
     return (
-        <TagEditor
-            tags={tags}
-            availableTags={availableTags}
-            onAdd={addTag}
-            onRemove={removeTag}
-            onDelete={deleteTag}
-        />
+        <TagEditor tags={tags} availableTags={availableTags} onAdd={addTag} onRemove={removeTag} onDelete={deleteTag} />
     );
 }

@@ -12,17 +12,12 @@ type PageProps = {
     accountTypes: AccountTypeOption[];
 };
 
-function typeLabel(
-    value: string | null,
-    accountTypes: AccountTypeOption[],
-): string | null {
+function typeLabel(value: string | null, accountTypes: AccountTypeOption[]): string | null {
     if (!value) {
         return null;
     }
 
-    return (
-        accountTypes.find((option) => option.value === value)?.label ?? value
-    );
+    return accountTypes.find((option) => option.value === value)?.label ?? value;
 }
 
 export default function Accounts() {
@@ -40,11 +35,7 @@ export default function Accounts() {
 
             <div className="space-y-6">
                 <div className="flex items-start justify-between gap-4">
-                    <Heading
-                        variant="small"
-                        title="Accounts"
-                        description="Create and manage the accounts you track"
-                    />
+                    <Heading variant="small" title="Accounts" description="Create and manage the accounts you track" />
 
                     <Button size="sm" onClick={() => setCreateOpen(true)}>
                         Add account
@@ -53,8 +44,7 @@ export default function Accounts() {
 
                 {accounts.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                        No accounts yet. Use “Add account” to create your first
-                        one.
+                        No accounts yet. Use “Add account” to create your first one.
                     </p>
                 ) : (
                     <ul className="space-y-2">
@@ -68,23 +58,15 @@ export default function Accounts() {
                                 >
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-medium">
-                                                {account.name}
-                                            </span>
+                                            <span className="font-medium">{account.name}</span>
                                             {account.is_linked && (
                                                 <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                                                    {account.institution_name ??
-                                                        'Linked'}
+                                                    {account.institution_name ?? 'Linked'}
                                                 </span>
                                             )}
                                         </div>
                                         <p className="text-xs text-muted-foreground">
-                                            {[
-                                                label,
-                                                account.last_four
-                                                    ? `••••${account.last_four}`
-                                                    : null,
-                                            ]
+                                            {[label, account.last_four ? `••••${account.last_four}` : null]
                                                 .filter(Boolean)
                                                 .join(' · ') || '—'}
                                         </p>
@@ -93,29 +75,16 @@ export default function Accounts() {
                                     <div className="flex items-center gap-2">
                                         <span className="tabular-nums">
                                             {account.balance_cents !== null
-                                                ? formatMoney(
-                                                      account.balance_cents,
-                                                      account.currency,
-                                                  )
+                                                ? formatMoney(account.balance_cents, account.currency)
                                                 : '—'}
                                         </span>
 
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => setEditing(account)}
-                                        >
+                                        <Button size="sm" variant="outline" onClick={() => setEditing(account)}>
                                             Edit
                                         </Button>
 
                                         {!account.is_linked && (
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() =>
-                                                    setDeleting(account)
-                                                }
-                                            >
+                                            <Button size="sm" variant="ghost" onClick={() => setDeleting(account)}>
                                                 Delete
                                             </Button>
                                         )}
@@ -141,10 +110,7 @@ export default function Accounts() {
                 accountTypes={accountTypes}
             />
 
-            <DeleteAccountDialog
-                account={deleting}
-                onClose={() => setDeleting(null)}
-            />
+            <DeleteAccountDialog account={deleting} onClose={() => setDeleting(null)} />
         </>
     );
 }

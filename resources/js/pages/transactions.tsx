@@ -2,11 +2,13 @@ import { Head, Link, router } from '@inertiajs/react';
 import { create as uploadCreate } from '@/actions/App/Http/Controllers/Transactions/UploadController';
 import { PaginationNav } from '@/components/pagination-nav';
 import { TransactionFilters as TransactionFiltersBar } from '@/components/transactions/transaction-filters';
+import { FlowTypeSelect, flowAmountClasses, formatFlowAmount } from '@/components/transactions/transaction-flow-type';
+import type { FlowType, FlowTypeOption } from '@/components/transactions/transaction-flow-type';
 import { TransactionTags } from '@/components/transactions/transaction-tags';
 import type { Tag } from '@/components/transactions/transaction-tags';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatMoney } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import { index as transactionsIndex } from '@/routes/transactions';
 import type { Pagination } from '@/types';
 
@@ -18,6 +20,9 @@ export type TransactionRow = {
     description: string | null;
     amount_cents: number;
     currency: string;
+    flow_type: FlowType;
+    flow_type_source: 'auto' | 'user';
+    is_paired_transfer: boolean;
     tags: Tag[];
 };
 
@@ -34,6 +39,7 @@ export type TransactionFilters = {
     category_id: number | null;
     min_amount: number | null;
     max_amount: number | null;
+    flow_type: FlowType[];
 };
 
 export type TransactionsPageProps = {
@@ -45,6 +51,7 @@ export type TransactionsPageProps = {
     category_options: FilterOption[];
     available_tags: Tag[];
     currency: string;
+    flow_type_options: FlowTypeOption[];
 };
 
 function formatDate(isoDate: string): string {
@@ -55,8 +62,12 @@ function formatDate(isoDate: string): string {
     });
 }
 
-function buildQuery(filters: TransactionFilters): Record<string, string> {
-    const query: Record<string, string> = {};
+function buildQuery(filters: TransactionFilters): Record<string, string | string[]> {
+    const query: Record<string, string | string[]> = {};
+
+    if (filters.flow_type.length > 0) {
+        query.flow_type = filters.flow_type;
+    }
 
     if (filters.start !== null) {
         query.start = filters.start;
@@ -97,6 +108,7 @@ export default function TransactionsIndex({
     merchant_options,
     category_options,
     available_tags,
+    flow_type_options,
 }: TransactionsPageProps) {
     const applyFilters = (next: TransactionFilters): void => {
         // Omit `page` so changing a filter resets to the first page (FR-010a),
@@ -132,6 +144,7 @@ export default function TransactionsIndex({
                     accountOptions={account_options}
                     merchantOptions={merchant_options}
                     categoryOptions={category_options}
+                    flowTypeOptions={flow_type_options}
                     onChange={applyFilters}
                 />
 
@@ -147,6 +160,7 @@ export default function TransactionsIndex({
                                 <TableRow>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Merchant</TableHead>
+                                    <TableHead>Type</TableHead>
                                     <TableHead>Category</TableHead>
                                     <TableHead>Description</TableHead>
                                     <TableHead>Tags</TableHead>
@@ -160,6 +174,14 @@ export default function TransactionsIndex({
                                             {formatDate(row.posted_at)}
                                         </TableCell>
                                         <TableCell>{row.merchant_label}</TableCell>
+                                        <TableCell>
+                                            <FlowTypeSelect
+                                                transactionId={row.id}
+                                                flowType={row.flow_type}
+                                                options={flow_type_options}
+                                                isPairedTransfer={row.is_paired_transfer}
+                                            />
+                                        </TableCell>
                                         <TableCell className="text-muted-foreground">
                                             {row.category_name ?? 'Uncategorized'}
                                         </TableCell>
@@ -173,8 +195,13 @@ export default function TransactionsIndex({
                                                 availableTags={available_tags}
                                             />
                                         </TableCell>
-                                        <TableCell className="text-right tabular-nums">
-                                            {formatMoney(row.amount_cents, row.currency)}
+                                        <TableCell
+                                            className={cn(
+                                                'text-right tabular-nums',
+                                                flowAmountClasses(row.flow_type, row.amount_cents),
+                                            )}
+                                        >
+                                            {formatFlowAmount(row.amount_cents, row.currency)}
                                         </TableCell>
                                     </TableRow>
                                 ))}

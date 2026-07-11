@@ -4,23 +4,12 @@ import type { ChangeEvent, FormEvent } from 'react';
 import { store } from '@/actions/App/Http/Controllers/Transactions/UploadController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
-import {
-    ColumnMapper,
-    emptyMapping,
-    isMappingComplete,
-    suggestMapping,
-} from '@/components/transactions/column-mapper';
+import { ColumnMapper, emptyMapping, isMappingComplete, suggestMapping } from '@/components/transactions/column-mapper';
 import type { ColumnMapping } from '@/components/transactions/column-mapper';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { parseDelimited } from '@/lib/csv';
 
 type AccountOption = { id: number; name: string; currency: string };
@@ -42,8 +31,7 @@ type PageProps = {
 const PREVIEW_ROWS = 5;
 
 export default function TransactionsUpload() {
-    const { accounts, savedMappings, importResult } =
-        usePage<PageProps>().props;
+    const { accounts, savedMappings, importResult } = usePage<PageProps>().props;
 
     const [headers, setHeaders] = useState<string[]>([]);
     const [previewRows, setPreviewRows] = useState<string[][]>([]);
@@ -73,9 +61,7 @@ export default function TransactionsUpload() {
         }
     }
 
-    async function chooseFile(
-        event: ChangeEvent<HTMLInputElement>,
-    ): Promise<void> {
+    async function chooseFile(event: ChangeEvent<HTMLInputElement>): Promise<void> {
         const file = event.target.files?.[0] ?? null;
         setData('file', file);
         setParseError(null);
@@ -108,10 +94,7 @@ export default function TransactionsUpload() {
     }
 
     const canSubmit =
-        data.account_id !== '' &&
-        data.file !== null &&
-        headers.length > 0 &&
-        isMappingComplete(data.mapping);
+        data.account_id !== '' && data.file !== null && headers.length > 0 && isMappingComplete(data.mapping);
 
     function submit(event: FormEvent<HTMLFormElement>): void {
         event.preventDefault();
@@ -141,9 +124,8 @@ export default function TransactionsUpload() {
                     <AlertTitle>Import complete</AlertTitle>
                     <AlertDescription>
                         <p>
-                            Imported {importResult.imported}, skipped{' '}
-                            {importResult.skipped}, failed {importResult.failed}
-                            .
+                            Imported {importResult.imported}, skipped {importResult.skipped}, failed{' '}
+                            {importResult.failed}.
                             {importResult.needsReview > 0 &&
                                 ` ${importResult.needsReview} new merchant(s) need review.`}
                         </p>
@@ -163,19 +145,13 @@ export default function TransactionsUpload() {
             <form onSubmit={submit} className="mt-6 space-y-6">
                 <div className="space-y-2">
                     <Label htmlFor="account">Account</Label>
-                    <Select
-                        value={data.account_id}
-                        onValueChange={chooseAccount}
-                    >
+                    <Select value={data.account_id} onValueChange={chooseAccount}>
                         <SelectTrigger id="account" className="w-full">
                             <SelectValue placeholder="Select an account" />
                         </SelectTrigger>
                         <SelectContent>
                             {accounts.map((account) => (
-                                <SelectItem
-                                    key={account.id}
-                                    value={String(account.id)}
-                                >
+                                <SelectItem key={account.id} value={String(account.id)}>
                                     {account.name}
                                 </SelectItem>
                             ))}

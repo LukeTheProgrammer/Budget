@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\FlowType;
 use Database\Factories\MerchantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,12 +17,13 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $user_id
  * @property int|null $category_id
+ * @property FlowType|null $default_flow_type
  * @property string $name
  * @property Carbon|null $confirmed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['user_id', 'category_id', 'name', 'confirmed_at'])]
+#[Fillable(['user_id', 'category_id', 'default_flow_type', 'name', 'confirmed_at'])]
 class Merchant extends Model
 {
     /** @use HasFactory<MerchantFactory> */
@@ -34,6 +36,7 @@ class Merchant extends Model
     {
         return [
             'confirmed_at' => 'datetime',
+            'default_flow_type' => FlowType::class,
         ];
     }
 
@@ -46,6 +49,22 @@ class Merchant extends Model
     public function scopeUnconfirmed(Builder $query): void
     {
         $query->whereNull('confirmed_at');
+    }
+
+    /**
+     * Limit the query to merchants the user has actually spent money with. A
+     * checking account mints "merchants" for payroll deposits and internal
+     * transfers; those are needed so classification rules have something to key
+     * on, but they are noise on a page about managing spending.
+     *
+     * @param  Builder<Merchant>  $query
+     */
+    public function scopeWithExpenseActivity(Builder $query): void
+    {
+        $query->whereHas(
+            'transactions',
+            fn (Builder $transactions) => $transactions->whereIn('flow_type', FlowType::spendingValues()),
+        );
     }
 
     /**

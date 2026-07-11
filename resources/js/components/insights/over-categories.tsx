@@ -3,20 +3,12 @@ import { formatMoney, formatSignedMoney } from '@/lib/format';
 import { swatchColor } from './swatch-color';
 import type { OverCategory } from './types';
 
-export function OverCategories({
-    rows,
-    currency,
-}: {
-    rows: OverCategory[];
-    currency: string;
-}) {
+export function OverCategories({ rows, currency }: { rows: OverCategory[]; currency: string }) {
     return (
         <Card>
             <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
                 <CardTitle>What pushed you over</CardTitle>
-                <span className="text-sm text-muted-foreground">
-                    Ranked by overage
-                </span>
+                <span className="text-sm text-muted-foreground">Ranked by overage</span>
             </CardHeader>
             <CardContent>
                 {rows.length === 0 ? (
@@ -28,13 +20,7 @@ export function OverCategories({
                         {rows.map((row, index) => {
                             const color = swatchColor(row.color, index);
                             const capRatio =
-                                row.spent_cents > 0
-                                    ? Math.min(
-                                          100,
-                                          (row.cap_cents / row.spent_cents) *
-                                              100,
-                                      )
-                                    : 100;
+                                row.spent_cents > 0 ? Math.min(100, (row.cap_cents / row.spent_cents) * 100) : 100;
 
                             return (
                                 <li
@@ -55,19 +41,9 @@ export function OverCategories({
                                             {row.name}
                                         </div>
                                         <div className="mt-1 pl-[18px] text-xs text-muted-foreground">
-                                            {formatMoney(
-                                                row.spent_cents,
-                                                currency,
-                                            )}{' '}
-                                            of{' '}
-                                            {formatMoney(
-                                                row.cap_cents,
-                                                currency,
-                                            )}{' '}
-                                            cap · {row.transaction_count}{' '}
-                                            {row.transaction_count === 1
-                                                ? 'transaction'
-                                                : 'transactions'}
+                                            {formatMoney(row.spent_cents, currency)} of{' '}
+                                            {formatMoney(row.cap_cents, currency)} cap · {row.transaction_count}{' '}
+                                            {row.transaction_count === 1 ? 'transaction' : 'transactions'}
                                         </div>
                                     </div>
                                     <div className="relative h-2 overflow-hidden rounded-full bg-muted ring-1 ring-border ring-inset">
@@ -85,14 +61,9 @@ export function OverCategories({
                                     </div>
                                     <div className="text-right">
                                         <div className="font-mono text-base font-medium text-destructive">
-                                            {formatSignedMoney(
-                                                row.over_cents,
-                                                currency,
-                                            )}
+                                            {formatSignedMoney(row.over_cents, currency)}
                                         </div>
-                                        <div className="text-[11px] text-muted-foreground">
-                                            over cap
-                                        </div>
+                                        <div className="text-[11px] text-muted-foreground">over cap</div>
                                     </div>
                                 </li>
                             );

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\FlowType;
 use App\Http\Requests\Budgets\UpdateBudgetsRequest;
 use App\Models\Category;
 use App\Models\Transaction;
@@ -86,7 +87,7 @@ class BudgetController extends Controller
             ->join('accounts', 'accounts.id', '=', 'transactions.account_id')
             ->join('merchants', 'merchants.id', '=', 'transactions.merchant_id')
             ->where('accounts.user_id', $userId)
-            ->where('transactions.amount_cents', '>', 0)
+            ->whereIn('transactions.flow_type', FlowType::spendingValues())
             ->whereNotNull('merchants.category_id')
             ->whereBetween('transactions.posted_at', [$start, $end])
             ->groupBy('merchants.category_id', 'month')
@@ -138,7 +139,7 @@ class BudgetController extends Controller
                     ->join('merchants', 'merchants.id', '=', 'transactions.merchant_id')
                     ->whereNull('transactions.deleted_at')
                     ->where('accounts.user_id', $userId)
-                    ->where('transactions.amount_cents', '>', 0)
+                    ->whereIn('transactions.flow_type', FlowType::spendingValues())
                     ->whereBetween('transactions.posted_at', [$start, $end])
                     ->whereNotNull('merchants.category_id')
                     ->select([

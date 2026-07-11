@@ -3,18 +3,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Popover,
-    PopoverAnchor,
-    PopoverContent,
-} from '@/components/ui/popover';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { update as updateSessionPeriod } from '@/routes/session-period';
 import type { SessionPeriodType, SharedPeriod } from '@/types';
 
@@ -48,11 +38,7 @@ export function SessionPeriodSelector() {
             return;
         }
 
-        router.post(
-            updateSessionPeriod.url(),
-            { type: value },
-            { preserveScroll: true, preserveState: true },
-        );
+        router.post(updateSessionPeriod.url(), { type: value }, { preserveScroll: true, preserveState: true });
     }
 
     function openCustom() {
@@ -117,16 +103,10 @@ export function SessionPeriodSelector() {
                         type="date"
                         value={form.data.start}
                         max={form.data.end || undefined}
-                        onChange={(event) =>
-                            form.setData('start', event.target.value)
-                        }
+                        onChange={(event) => form.setData('start', event.target.value)}
                         aria-invalid={Boolean(form.errors.start)}
                     />
-                    {form.errors.start && (
-                        <p className="text-sm text-destructive">
-                            {form.errors.start}
-                        </p>
-                    )}
+                    {form.errors.start && <p className="text-sm text-destructive">{form.errors.start}</p>}
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="period-end">End date</Label>
@@ -135,16 +115,10 @@ export function SessionPeriodSelector() {
                         type="date"
                         value={form.data.end}
                         min={form.data.start || undefined}
-                        onChange={(event) =>
-                            form.setData('end', event.target.value)
-                        }
+                        onChange={(event) => form.setData('end', event.target.value)}
                         aria-invalid={Boolean(form.errors.end)}
                     />
-                    {form.errors.end && (
-                        <p className="text-sm text-destructive">
-                            {form.errors.end}
-                        </p>
-                    )}
+                    {form.errors.end && <p className="text-sm text-destructive">{form.errors.end}</p>}
                 </div>
                 <Button
                     type="button"

@@ -1,11 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { Bar, BarChart, CartesianGrid, ReferenceLine, XAxis } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-} from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import type { ChartConfig } from '@/components/ui/chart';
 import { formatMoney } from '@/lib/format';
 
@@ -54,14 +50,7 @@ export function ReferenceLineLabel({
 
     return (
         <g>
-            <rect
-                x={x}
-                y={y}
-                width={boxWidth}
-                height={boxHeight}
-                rx={4}
-                fill="#27272a"
-            />
+            <rect x={x} y={y} width={boxWidth} height={boxHeight} rx={4} fill="#27272a" />
             <text
                 x={x + boxWidth / 2}
                 y={y + boxHeight / 2}
@@ -76,20 +65,10 @@ export function ReferenceLineLabel({
     );
 }
 
-export function SpendingTrend({
-    trend,
-    currency,
-}: {
-    trend: TrendPoint[];
-    currency: string;
-}) {
+export function SpendingTrend({ trend, currency }: { trend: TrendPoint[]; currency: string }) {
     const isHydrated = useIsHydrated();
 
-    const average =
-        trend.length > 0
-            ? trend.reduce((sum, point) => sum + point.total_cents, 0) /
-              trend.length
-            : 0;
+    const average = trend.length > 0 ? trend.reduce((sum, point) => sum + point.total_cents, 0) / trend.length : 0;
 
     return (
         <Card>
@@ -97,42 +76,24 @@ export function SpendingTrend({
                 <CardTitle>Spending trend</CardTitle>
             </CardHeader>
             <CardContent>
-                <ChartContainer
-                    config={chartConfig}
-                    className="max-h-[260px] w-full"
-                >
+                <ChartContainer config={chartConfig} className="max-h-[260px] w-full">
                     <BarChart data={trend} accessibilityLayer>
                         <CartesianGrid vertical={false} />
-                        <XAxis
-                            dataKey="label"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                        />
+                        <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
                         <ChartTooltip
                             content={
                                 <ChartTooltipContent
                                     labelKey="month"
-                                    formatter={(value) =>
-                                        formatMoney(Number(value), currency)
-                                    }
+                                    formatter={(value) => formatMoney(Number(value), currency)}
                                 />
                             }
                         />
-                        <Bar
-                            dataKey="total_cents"
-                            fill="var(--color-total_cents)"
-                            radius={4}
-                        />
+                        <Bar dataKey="total_cents" fill="var(--color-total_cents)" radius={4} />
                         {isHydrated && (
                             <ReferenceLine
                                 y={average}
                                 stroke="#27272a"
-                                label={
-                                    <ReferenceLineLabel
-                                        text={`Avg ${formatMoney(average, currency)}`}
-                                    />
-                                }
+                                label={<ReferenceLineLabel text={`Avg ${formatMoney(average, currency)}`} />}
                             />
                         )}
                     </BarChart>

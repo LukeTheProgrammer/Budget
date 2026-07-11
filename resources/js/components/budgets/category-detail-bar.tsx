@@ -1,4 +1,3 @@
-
 import { ACCENT, STATUS_COLOR } from './budget-shared';
 
 export function CategoryDetailBar({
@@ -12,7 +11,6 @@ export function CategoryDetailBar({
     isOver: boolean;
     overPercent: number;
 }) {
-
     return (
         <div className="relative h-7.5">
             <div className="flex h-full overflow-hidden rounded-[9px] bg-muted ring-1 ring-border ring-inset">

@@ -5,17 +5,11 @@
  * `wholeDollars` to drop the fractional part and render rounded whole units
  * (e.g. "$1,234" instead of "$1,234.56").
  */
-export function formatMoney(
-    amountCents: number,
-    currency: string,
-    wholeDollars = false,
-): string {
+export function formatMoney(amountCents: number, currency: string, wholeDollars = false): string {
     return new Intl.NumberFormat(undefined, {
         style: 'currency',
         currency,
-        ...(wholeDollars
-            ? { minimumFractionDigits: 0, maximumFractionDigits: 0 }
-            : {}),
+        ...(wholeDollars ? { minimumFractionDigits: 0, maximumFractionDigits: 0 } : {}),
     }).format(amountCents / 100);
 }
 
@@ -23,10 +17,7 @@ export function formatMoney(
  * Format a signed integer cent amount as a currency string with an explicit
  * leading sign (e.g. "+$36", "−$54"). Zero is rendered without a sign.
  */
-export function formatSignedMoney(
-    amountCents: number,
-    currency: string,
-): string {
+export function formatSignedMoney(amountCents: number, currency: string): string {
     const formatted = formatMoney(Math.abs(amountCents), currency);
 
     if (amountCents > 0) {

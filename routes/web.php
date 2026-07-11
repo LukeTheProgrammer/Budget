@@ -16,6 +16,7 @@ use App\Http\Controllers\SessionPeriodController;
 use App\Http\Controllers\Tags\TagController;
 use App\Http\Controllers\Transactions\ImportController;
 use App\Http\Controllers\Transactions\TransactionController;
+use App\Http\Controllers\Transactions\TransactionFlowTypeController;
 use App\Http\Controllers\Transactions\TransactionTagController;
 use App\Http\Controllers\Transactions\UploadController;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('transactions/import', [ImportController::class, 'store'])->name('transactions.import');
     Route::get('transactions/upload', [UploadController::class, 'create'])->name('transactions.upload.create');
     Route::post('transactions/upload', [UploadController::class, 'store'])->name('transactions.upload.store');
+    Route::patch('transactions/{transaction}/flow-type', [TransactionFlowTypeController::class, 'update'])->name('transactions.flow-type.update');
     Route::post('transactions/{transaction}/tags', [TransactionTagController::class, 'store'])->name('transactions.tags.store');
     Route::delete('transactions/{transaction}/tags/{tag}', [TransactionTagController::class, 'destroy'])->name('transactions.tags.destroy');
 

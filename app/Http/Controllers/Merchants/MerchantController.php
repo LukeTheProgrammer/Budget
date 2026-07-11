@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Merchants;
 
+use App\Enums\FlowType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Merchants\MerchantFilterRequest;
 use App\Http\Requests\Merchants\UpdateMerchantRequest;
@@ -44,8 +45,13 @@ class MerchantController extends Controller
             ->where('user_id', $userId)
             ->addSelect([
                 '*',
-                'total_amount_cents' => Transaction::selectRaw('COALESCE(SUM(amount_cents), 0)')->whereColumn('merchant_id', 'merchants.id'),
+                // Spending only: a merchant's total is what was spent there, so
+                // payroll deposits and internal transfers must not land in it.
+                'total_amount_cents' => Transaction::selectRaw('COALESCE(SUM(amount_cents), 0)')
+                    ->whereColumn('merchant_id', 'merchants.id')
+                    ->whereIn('flow_type', FlowType::spendingValues()),
             ])
+            ->unless($request->boolean('include_non_expense'), fn (Builder $query): Builder => $query->withExpenseActivity())
             ->when($request->reviewOnly(), fn (Builder $query): Builder => $query->whereNull('confirmed_at'))
             ->when($search !== null, fn (Builder $query): Builder => $query->where(
                 fn (Builder $match): Builder => $match
@@ -71,6 +77,7 @@ class MerchantController extends Controller
                 ->count(),
             'available_tags' => $this->availableTags(),
             'available_categories' => $this->availableCategories($userId),
+            'include_non_expense' => $request->boolean('include_non_expense'),
         ]);
     }
 
@@ -109,7 +116,9 @@ class MerchantController extends Controller
 
         $merchant->loadCount('transactions')
             ->load(['category:id,name', 'aliases:id,merchant_id,name', 'rules:id,merchant_id,match_type,pattern', 'defaultTags']);
-        $merchant->total_amount_cents = (int) $merchant->transactions()->sum('amount_cents');
+        $merchant->total_amount_cents = (int) $merchant->transactions()
+            ->whereIn('flow_type', FlowType::spendingValues())
+            ->sum('amount_cents');
 
         return response()->json([
             'merchant' => $this->serializeMerchant($merchant, $normalizer),

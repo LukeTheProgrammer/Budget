@@ -6,7 +6,8 @@ import { MerchantTabs } from '@/components/merchants/merchant-tabs';
 import { MerchantsTable } from '@/components/merchants/merchants-table';
 import { PaginationNav } from '@/components/pagination-nav';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { index } from '@/routes/merchants';
 import type {
@@ -26,6 +27,7 @@ type MerchantsPageProps = {
     review_count: number;
     available_tags: MerchantTag[];
     available_categories: MerchantCategory[];
+    include_non_expense: boolean;
 };
 
 /**
@@ -51,6 +53,7 @@ export default function MerchantsIndex({
     review_count: reviewCount,
     available_tags,
     available_categories,
+    include_non_expense: includeNonExpense,
 }: MerchantsPageProps) {
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -65,15 +68,19 @@ export default function MerchantsIndex({
      * Reload the list with new filters. Any filter change drops the page number,
      * since an old page rarely means anything against a new result set.
      */
-    const reload = (changes: Partial<MerchantFilters>) => {
+    const reload = (changes: Partial<MerchantFilters> & { include_non_expense?: boolean }) => {
         router.get(
             index().url,
-            { ...filters, ...changes },
+            {
+                ...filters,
+                ...(includeNonExpense ? { include_non_expense: true } : {}),
+                ...changes,
+            },
             {
                 preserveScroll: true,
                 preserveState: true,
                 replace: true,
-                only: ['merchants', 'pagination', 'filters'],
+                only: ['merchants', 'pagination', 'filters', 'include_non_expense'],
             },
         );
     };
@@ -118,6 +125,17 @@ export default function MerchantsIndex({
                             <Button onClick={() => setDialogOpen(true)}>Group {selectedIds.length} merchants</Button>
                         )}
                     </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        id="include-non-expense"
+                        checked={includeNonExpense}
+                        onCheckedChange={(checked) => reload({ include_non_expense: checked === true })}
+                    />
+                    <Label htmlFor="include-non-expense" className="text-sm font-normal text-muted-foreground">
+                        Show merchants with no spending (payroll, transfers)
+                    </Label>
                 </div>
 
                 <MerchantTabs tab={filters.tab} reviewCount={reviewCount} onSelect={selectTab} onSearch={setSearch} />

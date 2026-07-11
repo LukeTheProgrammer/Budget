@@ -63,11 +63,7 @@ export default function Connections() {
     const disconnect = (connection: Connection) => {
         const name = connection.institution_name ?? 'this bank';
 
-        if (
-            !window.confirm(
-                `Disconnect ${name}? It will stop syncing. Imported transactions are kept.`,
-            )
-        ) {
+        if (!window.confirm(`Disconnect ${name}? It will stop syncing. Imported transactions are kept.`)) {
             return;
         }
 
@@ -93,67 +89,42 @@ export default function Connections() {
                     <PlaidLinkButton />
                 </div>
 
-                {status && (
-                    <p className="text-sm text-muted-foreground">{status}</p>
-                )}
+                {status && <p className="text-sm text-muted-foreground">{status}</p>}
 
                 {connections.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                        No banks linked yet. Use “Link a bank” to connect your
-                        first account.
+                        No banks linked yet. Use “Link a bank” to connect your first account.
                     </p>
                 ) : (
                     <ul className="space-y-4">
                         {connections.map((connection) => (
-                            <li
-                                key={connection.id}
-                                className="rounded-lg border p-4"
-                            >
+                            <li key={connection.id} className="rounded-lg border p-4">
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
                                         <span className="font-medium">
-                                            {connection.institution_name ??
-                                                'Linked bank'}
+                                            {connection.institution_name ?? 'Linked bank'}
                                         </span>
                                         <p className="text-xs text-muted-foreground">
                                             {statusLabels[connection.status]} ·{' '}
-                                            {formatLastSynced(
-                                                connection.last_synced_at,
-                                            )}
+                                            {formatLastSynced(connection.last_synced_at)}
                                         </p>
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        {connection.status ===
-                                            'reauth_required' && (
-                                            <PlaidLinkButton
-                                                connectionId={connection.id}
-                                                label="Re-authenticate"
-                                            />
+                                        {connection.status === 'reauth_required' && (
+                                            <PlaidLinkButton connectionId={connection.id} label="Re-authenticate" />
                                         )}
 
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            onClick={() =>
-                                                triggerSync(connection.id)
-                                            }
-                                            disabled={
-                                                syncingId === connection.id
-                                            }
+                                            onClick={() => triggerSync(connection.id)}
+                                            disabled={syncingId === connection.id}
                                         >
-                                            {syncingId === connection.id
-                                                ? 'Syncing…'
-                                                : 'Sync'}
+                                            {syncingId === connection.id ? 'Syncing…' : 'Sync'}
                                         </Button>
 
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() =>
-                                                disconnect(connection)
-                                            }
-                                        >
+                                        <Button size="sm" variant="ghost" onClick={() => disconnect(connection)}>
                                             Disconnect
                                         </Button>
                                     </div>
@@ -161,10 +132,7 @@ export default function Connections() {
 
                                 <ul className="mt-3 space-y-1">
                                     {connection.accounts.map((account) => (
-                                        <li
-                                            key={account.id}
-                                            className="flex items-center justify-between text-sm"
-                                        >
+                                        <li key={account.id} className="flex items-center justify-between text-sm">
                                             <span>
                                                 {account.name}
                                                 {account.last_four && (
@@ -176,10 +144,7 @@ export default function Connections() {
                                             </span>
                                             <span className="tabular-nums">
                                                 {account.balance_cents !== null
-                                                    ? formatMoney(
-                                                          account.balance_cents,
-                                                          account.currency,
-                                                      )
+                                                    ? formatMoney(account.balance_cents, account.currency)
                                                     : '—'}
                                             </span>
                                         </li>
