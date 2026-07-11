@@ -38,6 +38,52 @@ class CsvTransactionImporter
     public function __construct(private TransactionRowStore $rowStore) {}
 
     /**
+     * Override the configured default account for this import run.
+     */
+    public function forAccount(Account $account): static
+    {
+        $this->account = $account;
+
+        return $this;
+    }
+
+    /**
+     * Importable CSV files discovered on the private disk.
+     *
+     * @return list<string>
+     */
+    public function availableFiles(): array
+    {
+        return $this->discoverFiles();
+    }
+
+    /**
+     * Import a specific set of files, capturing per-file failures like
+     * {@see importAll()} does.
+     *
+     * @param  list<string>  $relativePaths
+     * @return array<string, ImportResult>
+     *
+     * @throws RowImportException when $stopOnFailure is true and a row fails.
+     */
+    public function importFiles(array $relativePaths, bool $stopOnFailure = false): array
+    {
+        $results = [];
+
+        foreach ($relativePaths as $relativePath) {
+            try {
+                $results[$relativePath] = $this->importFile($relativePath, $stopOnFailure);
+            } catch (ImportException $e) {
+                $result = new ImportResult($relativePath);
+                $result->recordFailure(0, $e->getMessage());
+                $results[$relativePath] = $result;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * Import a single CSV file located relative to the `local` disk root
      * (e.g. "Chase7452_Activity20260601.CSV").
      *
@@ -140,19 +186,7 @@ class CsvTransactionImporter
     {
         $this->account();
 
-        $results = [];
-
-        foreach ($this->discoverFiles() as $relativePath) {
-            try {
-                $results[$relativePath] = $this->importFile($relativePath, $stopOnFailure);
-            } catch (ImportException $e) {
-                $result = new ImportResult($relativePath);
-                $result->recordFailure(0, $e->getMessage());
-                $results[$relativePath] = $result;
-            }
-        }
-
-        return $results;
+        return $this->importFiles($this->discoverFiles(), $stopOnFailure);
     }
 
     /**
