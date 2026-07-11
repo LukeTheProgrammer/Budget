@@ -12,6 +12,7 @@ import type {
     BudgetTransaction,
     DerivedCategory,
     Merchant,
+    MerchantCategory,
     MerchantTag,
 } from '@/types';
 import { ACCENT, STATUS_COLOR, STATUS_LABEL } from './budget-shared';
@@ -106,6 +107,7 @@ export function CategoryDetail({
 type EditingMerchant = {
     merchant: Merchant;
     availableTags: MerchantTag[];
+    availableCategories: MerchantCategory[];
 };
 
 function StatusBadge({
@@ -158,11 +160,15 @@ function RecentTransactions({
             return;
         }
 
-        const data: { merchant: Merchant; available_tags: MerchantTag[] } =
-            await response.json();
+        const data: {
+            merchant: Merchant;
+            available_tags: MerchantTag[];
+            available_categories: MerchantCategory[];
+        } = await response.json();
         setEditing({
             merchant: data.merchant,
             availableTags: data.available_tags,
+            availableCategories: data.available_categories,
         });
     };
 
@@ -256,6 +262,7 @@ function RecentTransactions({
                 <EditMerchantDialog
                     merchant={editing.merchant}
                     availableTags={editing.availableTags}
+                    availableCategories={editing.availableCategories}
                     open
                     onOpenChange={(open) => {
                         if (!open) {

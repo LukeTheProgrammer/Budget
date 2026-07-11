@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Merchants;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Merchants\MerchantFilterRequest;
 use App\Http\Requests\Merchants\UpdateMerchantRequest;
+use App\Models\Category;
 use App\Models\Merchant;
 use App\Models\Tag;
 use App\Models\Transaction;
@@ -69,6 +70,7 @@ class MerchantController extends Controller
                 ->whereNull('confirmed_at')
                 ->count(),
             'available_tags' => $this->availableTags(),
+            'available_categories' => $this->availableCategories($userId),
         ]);
     }
 
@@ -112,17 +114,20 @@ class MerchantController extends Controller
         return response()->json([
             'merchant' => $this->serializeMerchant($merchant, $normalizer),
             'available_tags' => $this->availableTags(),
+            'available_categories' => $this->availableCategories($request->user()->id),
         ]);
     }
 
     /**
-     * Rename a merchant. Renaming also confirms it, since an edit is an explicit
-     * review of an auto-created merchant.
+     * Rename a merchant and set the category its transactions roll up into.
+     * Editing also confirms it, since an edit is an explicit review of an
+     * auto-created merchant.
      */
     public function update(UpdateMerchantRequest $request, Merchant $merchant): RedirectResponse
     {
         $merchant->update([
             'name' => $request->validated('name'),
+            'category_id' => $request->validated('category_id'),
             'confirmed_at' => $merchant->confirmed_at ?? now(),
         ]);
 
@@ -168,6 +173,21 @@ class MerchantController extends Controller
                 ->map(fn (Tag $tag): array => ['slug' => $tag->slug, 'name' => $tag->name])
                 ->values(),
         ];
+    }
+
+    /**
+     * The user's categories offered as options in the edit dialog.
+     *
+     * @return array<int, array{id: int, name: string}>
+     */
+    private function availableCategories(int $userId): array
+    {
+        return Category::query()
+            ->where('user_id', $userId)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Category $category): array => ['id' => $category->id, 'name' => $category->name])
+            ->all();
     }
 
     /**

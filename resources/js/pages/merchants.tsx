@@ -9,7 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { index } from '@/routes/merchants';
-import type { BreadcrumbItem, Merchant, MerchantFilters, MerchantTab, MerchantTag, Pagination } from '@/types';
+import type {
+    BreadcrumbItem,
+    Merchant,
+    MerchantCategory,
+    MerchantFilters,
+    MerchantTab,
+    MerchantTag,
+    Pagination,
+} from '@/types';
 
 type MerchantsPageProps = {
     merchants: Merchant[];
@@ -17,6 +25,7 @@ type MerchantsPageProps = {
     filters: MerchantFilters;
     review_count: number;
     available_tags: MerchantTag[];
+    available_categories: MerchantCategory[];
 };
 
 /**
@@ -41,6 +50,7 @@ export default function MerchantsIndex({
     filters,
     review_count: reviewCount,
     available_tags,
+    available_categories,
 }: MerchantsPageProps) {
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -107,15 +117,6 @@ export default function MerchantsIndex({
                         {selectedIds.length >= 2 && (
                             <Button onClick={() => setDialogOpen(true)}>Group {selectedIds.length} merchants</Button>
                         )}
-                        {/* <Input
-                            type="search"
-                            name="merchant-search"
-                            placeholder="Search"
-                            className="min-w-[36em]"
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                            aria-label="Search merchants"
-                        /> */}
                     </div>
                 </div>
 
@@ -157,6 +158,7 @@ export default function MerchantsIndex({
                 <EditMerchantDialog
                     merchant={editingMerchant}
                     availableTags={available_tags}
+                    availableCategories={available_categories}
                     open={editingId !== null}
                     onOpenChange={(open) => {
                         if (!open) {

@@ -5,6 +5,7 @@ namespace App\Http\Requests\Merchants;
 use App\Models\Merchant;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateMerchantRequest extends FormRequest
 {
@@ -19,6 +20,17 @@ class UpdateMerchantRequest extends FormRequest
     }
 
     /**
+     * The category select submits an empty string when "Uncategorized" is
+     * chosen; treat that as an explicit null rather than a missing field.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('category_id') === '') {
+            $this->merge(['category_id' => null]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -27,6 +39,12 @@ class UpdateMerchantRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:200'],
+            'category_id' => [
+                'present',
+                'nullable',
+                'integer',
+                Rule::exists('categories', 'id')->where('user_id', $this->user()?->id),
+            ],
         ];
     }
 }

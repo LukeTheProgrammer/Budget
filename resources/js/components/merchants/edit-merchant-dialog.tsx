@@ -1,5 +1,6 @@
 import { Form, router, useForm } from '@inertiajs/react';
-import { Plus, X } from 'lucide-react';
+import { Info, Plus, X } from 'lucide-react';
+import { useState } from 'react';
 import MerchantAliasController from '@/actions/App/Http/Controllers/Merchants/MerchantAliasController';
 import MerchantController from '@/actions/App/Http/Controllers/Merchants/MerchantController';
 import MerchantDefaultTagController from '@/actions/App/Http/Controllers/Merchants/MerchantDefaultTagController';
@@ -19,7 +20,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { Merchant, MerchantTag } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { Merchant, MerchantCategory, MerchantTag } from '@/types';
 
 function RulesSection({ merchant }: { merchant: Merchant }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -42,11 +45,21 @@ function RulesSection({ merchant }: { merchant: Merchant }) {
 
     return (
         <div className="grid gap-2 border-t border-sidebar-border/70 pt-4 dark:border-sidebar-border">
-            <Label>Matching rules</Label>
-            <p className="text-xs text-muted-foreground">
-                A prefix or pattern auto-resolves every future variant of this merchant — no more reviewing new store
-                numbers.
-            </p>
+            <div className="flex items-center justify-between mb-2">
+                <Label>Matching Rules</Label>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Info className="size-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-background text-foreground border">
+                        <p className="text-xs text-muted-foreground max-w-[10em]">
+                            A prefix or pattern auto-resolves every future variant of this merchant — no more reviewing new store
+                            numbers.
+                        </p>
+                    </TooltipContent>
+                </Tooltip>
+            </div>
+
             {merchant.rules.length > 0 && (
                 <ul className="grid gap-1">
                     {merchant.rules.map((rule) => (
@@ -121,10 +134,22 @@ function DefaultTagsSection({ merchant, availableTags }: { merchant: Merchant; a
 
     return (
         <div className="grid gap-2 border-t border-sidebar-border/70 pt-4 dark:border-sidebar-border">
-            <Label>Default tags</Label>
+            <div className="flex items-center justify-between mb-2">
+                <Label>Default Tags</Label>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Info className="size-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-background text-foreground border">
+                        <p className="text-xs text-muted-foreground max-w-[10em]">
+                            Applied automatically to this merchant's transactions when they are
+                            imported. Changing these does not affect existing transactions.
+                        </p>
+                    </TooltipContent>
+                </Tooltip>
+            </div>
             <p className="text-xs text-muted-foreground">
-                Applied automatically to this merchant's transactions when they are imported. Changing these does not
-                affect existing transactions.
+
             </p>
             <TagEditor
                 tags={merchant.default_tags}
@@ -137,14 +162,59 @@ function DefaultTagsSection({ merchant, availableTags }: { merchant: Merchant; a
     );
 }
 
+/**
+ * The sentinel used for the "Uncategorized" option, since a `SelectItem` cannot
+ * carry an empty value. It is mapped back to an empty string on submit, which
+ * the update request treats as an explicit null.
+ */
+const NO_CATEGORY = 'none';
+
+function CategorySection({
+    merchant,
+    availableCategories,
+}: {
+    merchant: Merchant;
+    availableCategories: MerchantCategory[];
+}) {
+    const [categoryId, setCategoryId] = useState(
+        merchant.category_id !== null ? String(merchant.category_id) : NO_CATEGORY,
+    );
+
+    return (
+        <div className="grid gap-2">
+            <Label htmlFor="edit-category">Category</Label>
+            <input
+                type="hidden"
+                name="category_id"
+                value={categoryId === NO_CATEGORY ? '' : categoryId}
+            />
+            <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger id="edit-category" className="w-full">
+                    <SelectValue placeholder="Uncategorized" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value={NO_CATEGORY}>Uncategorized</SelectItem>
+                    {availableCategories.map((category) => (
+                        <SelectItem key={category.id} value={String(category.id)}>
+                            {category.name}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
+    );
+}
+
 export function EditMerchantDialog({
     merchant,
     availableTags,
+    availableCategories,
     open,
     onOpenChange,
 }: {
     merchant: Merchant;
     availableTags: MerchantTag[];
+    availableCategories: MerchantCategory[];
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
@@ -169,103 +239,108 @@ export function EditMerchantDialog({
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Edit merchant</DialogTitle>
-                    <DialogDescription>
-                        Rename {merchant.name}, manage the aliases and rules that resolve to it.
-                    </DialogDescription>
-                </DialogHeader>
+        <Form
+            {...MerchantController.update.form(merchant.id)}
+            options={{ preserveScroll: true }}
+            onSuccess={() => onOpenChange(false)}
+            className="grid gap-4"
+        >
+            {({ processing, errors }) => (
+                <Dialog open={open} onOpenChange={onOpenChange}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Edit merchant</DialogTitle>
+                            <DialogDescription>Edit {merchant.name}.</DialogDescription>
+                        </DialogHeader>
 
-                <Form
-                    {...MerchantController.update.form(merchant.id)}
-                    options={{ preserveScroll: true }}
-                    onSuccess={() => onOpenChange(false)}
-                    className="grid gap-4"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-name">Name</Label>
-                                <Input
-                                    id="edit-name"
-                                    name="name"
-                                    defaultValue={
-                                        merchant.confirmed ? merchant.name : (merchant.suggested_name ?? merchant.name)
-                                    }
-                                    autoFocus
-                                />
-                                <InputError message={errors.name} />
-                            </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit-name">Name</Label>
+                            <Input
+                                id="edit-name"
+                                name="name"
+                                defaultValue={
+                                    merchant.confirmed ? merchant.name : (merchant.suggested_name ?? merchant.name)
+                                }
+                                autoFocus
+                            />
+                            <InputError message={errors.name} />
+                        </div>
 
-                            <div className="grid gap-2 border-t border-sidebar-border/70 pt-4 dark:border-sidebar-border">
-                                <Label>Aliases</Label>
-                                {merchant.aliases.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">No aliases yet.</p>
-                                ) : (
-                                    <ul className="grid gap-1">
-                                        {merchant.aliases.map((alias) => (
-                                            <li
-                                                key={alias.id}
-                                                className="flex items-center justify-between gap-2 text-sm"
-                                            >
-                                                <span>{alias.name}</span>
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="size-7 text-muted-foreground"
-                                                    onClick={() => removeAlias(alias.id)}
-                                                    aria-label={`Remove alias ${alias.name}`}
-                                                >
-                                                    <X className="size-4" />
-                                                </Button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                                <div className="grid gap-1">
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            value={data.name}
-                                            onChange={(event) => setData('name', event.target.value)}
-                                            placeholder="New alias"
-                                            className="h-8"
-                                        />
-                                        <Button
-                                            type="button"
-                                            size="icon"
-                                            className="size-8 shrink-0"
-                                            disabled={addingAlias}
-                                            onClick={submitAlias}
-                                            aria-label="Add alias"
+                        <div className="grid gap-2">
+                            <CategorySection
+                                key={merchant.id}
+                                merchant={merchant}
+                                availableCategories={availableCategories}
+                            />
+                            <InputError message={errors.category_id} />
+                        </div>
+
+                        <div className="grid gap-2 border-t border-sidebar-border/70 pt-4 dark:border-sidebar-border">
+                            <Label>Aliases</Label>
+                            {merchant.aliases.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">No aliases yet.</p>
+                            ) : (
+                                <ul className="grid gap-1">
+                                    {merchant.aliases.map((alias) => (
+                                        <li
+                                            key={alias.id}
+                                            className="flex items-center justify-between gap-2 text-sm"
                                         >
-                                            <Plus className="size-4" />
-                                        </Button>
-                                    </div>
-                                    <InputError message={aliasErrors.name} />
-                                </div>
-                            </div>
-
-                            <DialogFooter>
-                                <DialogClose asChild>
-                                    <Button type="button" variant="outline">
-                                        Cancel
+                                            <span>{alias.name}</span>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="size-7 text-muted-foreground"
+                                                onClick={() => removeAlias(alias.id)}
+                                                aria-label={`Remove alias ${alias.name}`}
+                                            >
+                                                <X className="size-4" />
+                                            </Button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            <div className="grid gap-1">
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        value={data.name}
+                                        onChange={(event) => setData('name', event.target.value)}
+                                        placeholder="New alias"
+                                        className="h-8"
+                                    />
+                                    <Button
+                                        type="button"
+                                        size="icon"
+                                        className="size-8 shrink-0"
+                                        disabled={addingAlias}
+                                        onClick={submitAlias}
+                                        aria-label="Add alias"
+                                    >
+                                        <Plus className="size-4" />
                                     </Button>
-                                </DialogClose>
-                                <Button type="submit" disabled={processing}>
-                                    Save
+                                </div>
+                                <InputError message={aliasErrors.name} />
+                            </div>
+                        </div>
+
+                        <RulesSection merchant={merchant} />
+
+                        <DefaultTagsSection merchant={merchant} availableTags={availableTags} />
+
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button type="button" variant="outline">
+                                    Cancel
                                 </Button>
-                            </DialogFooter>
-                        </>
-                    )}
-                </Form>
-
-                <RulesSection merchant={merchant} />
-
-                <DefaultTagsSection merchant={merchant} availableTags={availableTags} />
-            </DialogContent>
-        </Dialog>
+                            </DialogClose>
+                            <Button type="submit" disabled={processing}>
+                                Save
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
+        </Form>
     );
 }

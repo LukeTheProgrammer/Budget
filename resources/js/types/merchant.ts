@@ -14,6 +14,11 @@ export type MerchantTag = {
     name: string;
 };
 
+export type MerchantCategory = {
+    id: number;
+    name: string;
+};
+
 export type MerchantTab = 'all' | 'review';
 
 export type MerchantFilters = {
