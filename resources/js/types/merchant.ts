@@ -14,6 +14,13 @@ export type MerchantTag = {
     name: string;
 };
 
+export type MerchantTab = 'all' | 'review';
+
+export type MerchantFilters = {
+    tab: MerchantTab;
+    search: string;
+};
+
 export type Merchant = {
     id: number;
     name: string;
@@ -21,6 +28,7 @@ export type Merchant = {
     suggested_name: string | null;
     suggested_prefix: string | null;
     category_id: number | null;
+    category_name: string | null;
     transactions_count: number;
     transactions_sum: number;
     aliases: MerchantAlias[];

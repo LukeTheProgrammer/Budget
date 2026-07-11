@@ -40,7 +40,6 @@ class MerchantGrouper
             $merchants = Merchant::query()
                 ->where('user_id', $user->id)
                 ->whereIn('id', $ids)
-                ->with('aliases')
                 ->lockForUpdate()
                 ->get();
 
@@ -54,10 +53,6 @@ class MerchantGrouper
                 throw new InvalidArgumentException('The primary merchant must be part of the group.');
             }
 
-            // Names already represented on the primary. Its own name is held as a
-            // self-alias, so the alias collection is the complete picture.
-            $seen = $primary->aliases->pluck('normalized_name')->all();
-
             foreach ($merchants as $merchant) {
                 if ($merchant->id === $primary->id) {
                     continue;
@@ -66,13 +61,16 @@ class MerchantGrouper
                 Transaction::where('merchant_id', $merchant->id)
                     ->update(['merchant_id' => $primary->id]);
 
-                // Retain the absorbed merchant's raw name as an alias of the primary.
-                $this->retainAlias($user->id, $primary->id, $merchant->name, $seen);
+                // Repoint the absorbed merchant's existing aliases at the primary.
+                // Moving the rows rather than recreating them keeps the user-wide
+                // (user_id, normalized_name) unique index satisfied, and spares them
+                // from the merchant's cascading delete below.
+                MerchantAlias::where('user_id', $user->id)
+                    ->where('merchant_id', $merchant->id)
+                    ->update(['merchant_id' => $primary->id]);
 
-                // Carry over the absorbed merchant's existing aliases.
-                foreach ($merchant->aliases as $alias) {
-                    $this->retainAlias($user->id, $primary->id, $alias->name, $seen);
-                }
+                // Retain the absorbed merchant's raw name as an alias of the primary.
+                $this->retainAlias($user->id, $primary->id, $merchant->name);
 
                 $merchant->delete();
             }
@@ -86,16 +84,16 @@ class MerchantGrouper
     }
 
     /**
-     * Create an alias on the primary merchant unless its normalized form is
-     * already represented. Tracks seen normalized names to avoid duplicates.
-     *
-     * @param  list<string>  $seen
+     * Create an alias on the primary merchant unless the user already has an alias
+     * with the same normalized form, which the unique index would otherwise reject.
      */
-    private function retainAlias(int $userId, int $primaryId, string $name, array &$seen): void
+    private function retainAlias(int $userId, int $primaryId, string $name): void
     {
-        $normalized = mb_strtolower(trim($name));
+        $exists = MerchantAlias::where('user_id', $userId)
+            ->where('normalized_name', mb_strtolower(trim($name)))
+            ->exists();
 
-        if (in_array($normalized, $seen, true)) {
+        if ($exists) {
             return;
         }
 
@@ -104,7 +102,5 @@ class MerchantGrouper
             'merchant_id' => $primaryId,
             'name' => $name,
         ]);
-
-        $seen[] = $normalized;
     }
 }

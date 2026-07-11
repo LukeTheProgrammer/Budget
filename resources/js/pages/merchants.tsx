@@ -1,177 +1,94 @@
 import { Head, router } from '@inertiajs/react';
-import { Pencil } from 'lucide-react';
-import { useState } from 'react';
-import MerchantController from '@/actions/App/Http/Controllers/Merchants/MerchantController';
-import MerchantGroupController from '@/actions/App/Http/Controllers/Merchants/MerchantGroupController';
+import { useEffect, useRef, useState } from 'react';
 import { EditMerchantDialog } from '@/components/merchants/edit-merchant-dialog';
-import { Badge } from '@/components/ui/badge';
+import { GroupMerchantsDialog } from '@/components/merchants/group-merchants-dialog';
+import { MerchantTabs } from '@/components/merchants/merchant-tabs';
+import { MerchantsTable } from '@/components/merchants/merchants-table';
+import { PaginationNav } from '@/components/pagination-nav';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { index } from '@/routes/merchants';
-import type { BreadcrumbItem, Merchant, MerchantTag } from '@/types';
+import type { BreadcrumbItem, Merchant, MerchantFilters, MerchantTab, MerchantTag, Pagination } from '@/types';
 
 type MerchantsPageProps = {
     merchants: Merchant[];
+    pagination: Pagination;
+    filters: MerchantFilters;
+    review_count: number;
     available_tags: MerchantTag[];
 };
 
-function formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en', {
-        style: 'currency',
-        currency: 'usd',
-    }).format(value / 100);
-}
+/**
+ * The message shown in place of the table, which depends on why the page came
+ * back empty: an unmatched search, a cleared review queue, or no data at all.
+ */
+function emptyMessage(filters: MerchantFilters): string {
+    if (filters.search !== '') {
+        return `No merchants match “${filters.search}”.`;
+    }
 
-function GroupDialog({
-    merchants,
-    selectedIds,
-    open,
-    onOpenChange,
-    onGrouped,
-}: {
-    merchants: Merchant[];
-    selectedIds: number[];
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    onGrouped: () => void;
-}) {
-    const selected = merchants.filter((merchant) =>
-        selectedIds.includes(merchant.id),
-    );
-    const [primaryId, setPrimaryId] = useState<number | null>(
-        selectedIds[0] ?? null,
-    );
-    const [name, setName] = useState('');
-    const [processing, setProcessing] = useState(false);
+    if (filters.tab === 'review') {
+        return 'Nothing to review — every merchant is confirmed.';
+    }
 
-    const submit = () => {
-        if (primaryId === null) {
-            return;
-        }
-
-        setProcessing(true);
-        router.post(
-            MerchantGroupController.store.url(),
-            {
-                primary_merchant_id: primaryId,
-                merchant_ids: selectedIds,
-                name: name.trim() === '' ? null : name,
-            },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    onGrouped();
-                    onOpenChange(false);
-                },
-                onFinish: () => setProcessing(false),
-            },
-        );
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Group merchants</DialogTitle>
-                    <DialogDescription>
-                        Pick the merchant to keep. The others are merged into it
-                        — their transactions move over and their names become
-                        aliases.
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div className="grid gap-4">
-                    <fieldset className="grid gap-2">
-                        <legend className="mb-1 text-sm font-medium">
-                            Primary merchant
-                        </legend>
-                        {selected.map((merchant) => (
-                            <label
-                                key={merchant.id}
-                                className="flex items-center gap-2 text-sm"
-                            >
-                                <input
-                                    type="radio"
-                                    name="primary_merchant_id"
-                                    value={merchant.id}
-                                    checked={primaryId === merchant.id}
-                                    onChange={() => setPrimaryId(merchant.id)}
-                                />
-                                <span>{merchant.name}</span>
-                            </label>
-                        ))}
-                    </fieldset>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="group-name">Name (optional)</Label>
-                        <Input
-                            id="group-name"
-                            value={name}
-                            onChange={(event) => setName(event.target.value)}
-                            placeholder="e.g. Hy-Vee"
-                        />
-                    </div>
-                </div>
-
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button type="button" variant="outline">
-                            Cancel
-                        </Button>
-                    </DialogClose>
-                    <Button
-                        type="button"
-                        onClick={submit}
-                        disabled={processing || primaryId === null}
-                    >
-                        Group {selectedIds.length} merchants
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
+    return 'No merchants yet. Import some transactions to get started.';
 }
 
 export default function MerchantsIndex({
     merchants,
+    pagination,
+    filters,
+    review_count: reviewCount,
     available_tags,
 }: MerchantsPageProps) {
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [search, setSearch] = useState(filters.search);
 
-    const editingMerchant =
-        merchants.find((merchant) => merchant.id === editingId) ?? null;
+    const editingMerchant = merchants.find((merchant) => merchant.id === editingId) ?? null;
 
-    const reviewCount = merchants.filter(
-        (merchant) => !merchant.confirmed,
-    ).length;
+    const debouncedSearch = useDebouncedValue(search);
 
-    const toggle = (id: number, checked: boolean) => {
-        setSelectedIds((current) =>
-            checked
-                ? [...current, id]
-                : current.filter((value) => value !== id),
+    /**
+     * Reload the list with new filters. Any filter change drops the page number,
+     * since an old page rarely means anything against a new result set.
+     */
+    const reload = (changes: Partial<MerchantFilters>) => {
+        router.get(
+            index().url,
+            { ...filters, ...changes },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                replace: true,
+                only: ['merchants', 'pagination', 'filters'],
+            },
         );
     };
 
-    const confirmSuggested = (merchant: Merchant) => {
-        router.patch(
-            MerchantController.update.url(merchant.id),
-            { name: merchant.suggested_name ?? merchant.name },
-            { preserveScroll: true },
-        );
+    // Fetch once the debounced term settles on something new. The ref stops the
+    // effect from re-firing on the reload it just triggered, which would loop.
+    const requestedSearch = useRef(filters.search);
+
+    useEffect(() => {
+        if (debouncedSearch === requestedSearch.current) {
+            return;
+        }
+
+        requestedSearch.current = debouncedSearch;
+        reload({ search: debouncedSearch });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedSearch]);
+
+    const selectTab = (tab: MerchantTab) => {
+        setSelectedIds([]);
+        reload({ tab });
+    };
+
+    const toggle = (id: number, selected: boolean) => {
+        setSelectedIds((current) => (selected ? [...current, id] : current.filter((value) => value !== id)));
     };
 
     return (
@@ -183,132 +100,51 @@ export default function MerchantsIndex({
                     <div>
                         <h1 className="text-xl font-semibold">Merchants</h1>
                         <p className="text-sm text-muted-foreground">
-                            {reviewCount > 0
-                                ? `${reviewCount} merchant(s) need review.`
-                                : 'Manage how merchants appear and group store variants together.'}
+                            Manage how merchants appear and group store variants together.
                         </p>
                     </div>
-                    {selectedIds.length >= 2 && (
-                        <Button onClick={() => setDialogOpen(true)}>
-                            Group {selectedIds.length} merchants
-                        </Button>
-                    )}
+                    <div className="flex items-end justify-end gap-2">
+                        {selectedIds.length >= 2 && (
+                            <Button onClick={() => setDialogOpen(true)}>Group {selectedIds.length} merchants</Button>
+                        )}
+                        {/* <Input
+                            type="search"
+                            name="merchant-search"
+                            placeholder="Search"
+                            className="min-w-[36em]"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            aria-label="Search merchants"
+                        /> */}
+                    </div>
                 </div>
+
+                <MerchantTabs tab={filters.tab} reviewCount={reviewCount} onSelect={selectTab} onSearch={setSearch} />
 
                 {merchants.length === 0 ? (
                     <div className="rounded-xl border border-sidebar-border/70 p-8 text-center text-sm text-muted-foreground dark:border-sidebar-border">
-                        No merchants yet. Import some transactions to get
-                        started.
+                        {emptyMessage(filters)}
                     </div>
                 ) : (
-                    <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <table className="w-full text-sm">
-                            <thead className="border-b border-sidebar-border/70 text-left text-muted-foreground dark:border-sidebar-border">
-                                <tr>
-                                    <th className="w-10 px-4 py-3" />
-                                    <th className="px-4 py-3 font-medium">
-                                        Merchant
-                                    </th>
-                                    <th className="px-4 py-3 font-medium">
-                                        Aliases
-                                    </th>
-                                    <th className="px-4 py-3 text-right font-medium">
-                                        Transaction Count
-                                    </th>
-                                    <th className="px-4 py-3 text-right font-medium">
-                                        Transaction Sum
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {merchants.map((merchant) => (
-                                    <tr
-                                        key={merchant.id}
-                                        className="border-b border-sidebar-border/40 last:border-0 dark:border-sidebar-border/40"
-                                    >
-                                        <td className="px-4 py-3">
-                                            <Checkbox
-                                                checked={selectedIds.includes(
-                                                    merchant.id,
-                                                )}
-                                                onCheckedChange={(checked) =>
-                                                    toggle(
-                                                        merchant.id,
-                                                        checked === true,
-                                                    )
-                                                }
-                                                aria-label={`Select ${merchant.name}`}
-                                            />
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium">
-                                                    {merchant.name}
-                                                </span>
-                                                {!merchant.confirmed && (
-                                                    <Badge variant="outline">
-                                                        Needs review
-                                                    </Badge>
-                                                )}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="size-7 text-muted-foreground"
-                                                    aria-label={`Edit ${merchant.name}`}
-                                                    onClick={() =>
-                                                        setEditingId(
-                                                            merchant.id,
-                                                        )
-                                                    }
-                                                >
-                                                    <Pencil className="size-4" />
-                                                </Button>
-                                            </div>
-                                            {!merchant.confirmed &&
-                                                merchant.suggested_name && (
-                                                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                                                        <span>
-                                                            Suggested:{' '}
-                                                            {
-                                                                merchant.suggested_name
-                                                            }
-                                                        </span>
-                                                        <Button
-                                                            type="button"
-                                                            variant="link"
-                                                            className="h-auto p-0 text-xs"
-                                                            onClick={() =>
-                                                                confirmSuggested(
-                                                                    merchant,
-                                                                )
-                                                            }
-                                                        >
-                                                            Confirm
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                        </td>
-                                        <td className="px-4 py-3 text-muted-foreground tabular-nums">
-                                            {merchant.aliases.length}
-                                        </td>
-                                        <td className="px-4 py-3 text-right tabular-nums">
-                                            {merchant.transactions_count}
-                                        </td>
-                                        <td className="px-4 py-3 text-right tabular-nums">
-                                            {formatCurrency(
-                                                merchant.transactions_sum,
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <MerchantsTable
+                        merchants={merchants}
+                        selectedIds={selectedIds}
+                        onSelectedChange={toggle}
+                        onEdit={setEditingId}
+                    />
                 )}
+
+                {pagination.total > 0 && (
+                    <p className="text-center text-sm text-muted-foreground">
+                        {pagination.total.toLocaleString()} {pagination.total === 1 ? 'merchant' : 'merchants'}
+                    </p>
+                )}
+
+                <PaginationNav pagination={pagination} />
             </div>
 
             {dialogOpen && (
-                <GroupDialog
+                <GroupMerchantsDialog
                     merchants={merchants}
                     selectedIds={selectedIds}
                     open={dialogOpen}

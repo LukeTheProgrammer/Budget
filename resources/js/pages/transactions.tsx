@@ -1,20 +1,14 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { create as uploadCreate } from '@/actions/App/Http/Controllers/Transactions/UploadController';
+import { PaginationNav } from '@/components/pagination-nav';
 import { TransactionFilters as TransactionFiltersBar } from '@/components/transactions/transaction-filters';
 import { TransactionTags } from '@/components/transactions/transaction-tags';
 import type { Tag } from '@/components/transactions/transaction-tags';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatMoney } from '@/lib/format';
-import { cn } from '@/lib/utils';
 import { index as transactionsIndex } from '@/routes/transactions';
+import type { Pagination } from '@/types';
 
 export type TransactionRow = {
     id: number;
@@ -40,20 +34,6 @@ export type TransactionFilters = {
     category_id: number | null;
     min_amount: number | null;
     max_amount: number | null;
-};
-
-export type PaginationLink = {
-    url: string | null;
-    label: string;
-    active: boolean;
-};
-
-export type Pagination = {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    links: PaginationLink[];
 };
 
 export type TransactionsPageProps = {
@@ -137,9 +117,7 @@ export default function TransactionsIndex({
                         <h1 className="text-xl font-semibold">Transactions</h1>
                         <p className="text-sm text-muted-foreground">
                             {pagination.total.toLocaleString()}{' '}
-                            {pagination.total === 1
-                                ? 'transaction'
-                                : 'transactions'}
+                            {pagination.total === 1 ? 'transaction' : 'transactions'}
                         </p>
                     </div>
 
@@ -160,9 +138,7 @@ export default function TransactionsIndex({
                 {transactions.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-dashed p-12 text-center">
                         <p className="font-medium">No transactions found</p>
-                        <p className="text-sm text-muted-foreground">
-                            Import some transactions to get started.
-                        </p>
+                        <p className="text-sm text-muted-foreground">Import some transactions to get started.</p>
                     </div>
                 ) : (
                     <div className="rounded-xl border">
@@ -174,9 +150,7 @@ export default function TransactionsIndex({
                                     <TableHead>Category</TableHead>
                                     <TableHead>Description</TableHead>
                                     <TableHead>Tags</TableHead>
-                                    <TableHead className="text-right">
-                                        Amount
-                                    </TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -185,12 +159,9 @@ export default function TransactionsIndex({
                                         <TableCell className="text-muted-foreground">
                                             {formatDate(row.posted_at)}
                                         </TableCell>
-                                        <TableCell>
-                                            {row.merchant_label}
-                                        </TableCell>
+                                        <TableCell>{row.merchant_label}</TableCell>
                                         <TableCell className="text-muted-foreground">
-                                            {row.category_name ??
-                                                'Uncategorized'}
+                                            {row.category_name ?? 'Uncategorized'}
                                         </TableCell>
                                         <TableCell className="max-w-xs truncate text-muted-foreground">
                                             {row.description ?? '—'}
@@ -203,10 +174,7 @@ export default function TransactionsIndex({
                                             />
                                         </TableCell>
                                         <TableCell className="text-right tabular-nums">
-                                            {formatMoney(
-                                                row.amount_cents,
-                                                row.currency,
-                                            )}
+                                            {formatMoney(row.amount_cents, row.currency)}
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -215,43 +183,7 @@ export default function TransactionsIndex({
                     </div>
                 )}
 
-                {pagination.last_page > 1 && (
-                    <nav className="flex flex-wrap items-center justify-center gap-1">
-                        {pagination.links.map((link, index) => {
-                            const className = cn(
-                                'inline-flex h-9 min-w-9 items-center justify-center rounded-md border px-3 text-sm',
-                                link.active &&
-                                    'border-primary bg-primary text-primary-foreground',
-                                !link.url &&
-                                    'pointer-events-none text-muted-foreground opacity-50',
-                            );
-
-                            if (!link.url) {
-                                return (
-                                    <span
-                                        key={index}
-                                        className={className}
-                                        dangerouslySetInnerHTML={{
-                                            __html: link.label,
-                                        }}
-                                    />
-                                );
-                            }
-
-                            return (
-                                <Link
-                                    key={index}
-                                    href={link.url}
-                                    preserveScroll
-                                    className={className}
-                                    dangerouslySetInnerHTML={{
-                                        __html: link.label,
-                                    }}
-                                />
-                            );
-                        })}
-                    </nav>
-                )}
+                <PaginationNav pagination={pagination} />
             </div>
         </>
     );

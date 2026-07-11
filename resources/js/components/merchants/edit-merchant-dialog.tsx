@@ -35,32 +35,24 @@ function RulesSection({ merchant }: { merchant: Merchant }) {
     };
 
     const removeRule = (ruleId: number) => {
-        router.delete(
-            MerchantRuleController.destroy.url([merchant.id, ruleId]),
-            {
-                preserveScroll: true,
-            },
-        );
+        router.delete(MerchantRuleController.destroy.url([merchant.id, ruleId]), {
+            preserveScroll: true,
+        });
     };
 
     return (
         <div className="grid gap-2 border-t border-sidebar-border/70 pt-4 dark:border-sidebar-border">
             <Label>Matching rules</Label>
             <p className="text-xs text-muted-foreground">
-                A prefix or pattern auto-resolves every future variant of this
-                merchant — no more reviewing new store numbers.
+                A prefix or pattern auto-resolves every future variant of this merchant — no more reviewing new store
+                numbers.
             </p>
             {merchant.rules.length > 0 && (
                 <ul className="grid gap-1">
                     {merchant.rules.map((rule) => (
-                        <li
-                            key={rule.id}
-                            className="flex items-center justify-between gap-2 text-sm"
-                        >
+                        <li key={rule.id} className="flex items-center justify-between gap-2 text-sm">
                             <span className="flex items-center gap-2">
-                                <Badge variant="secondary">
-                                    {rule.match_type}
-                                </Badge>
+                                <Badge variant="secondary">{rule.match_type}</Badge>
                                 <code className="text-xs">{rule.pattern}</code>
                             </span>
                             <Button
@@ -81,9 +73,7 @@ function RulesSection({ merchant }: { merchant: Merchant }) {
                 <div className="flex items-center gap-2">
                     <select
                         value={data.match_type}
-                        onChange={(event) =>
-                            setData('match_type', event.target.value)
-                        }
+                        onChange={(event) => setData('match_type', event.target.value)}
                         className="h-8 rounded-md border border-input bg-transparent px-2 text-sm shadow-xs"
                         aria-label="Rule type"
                     >
@@ -92,14 +82,8 @@ function RulesSection({ merchant }: { merchant: Merchant }) {
                     </select>
                     <Input
                         value={data.pattern}
-                        onChange={(event) =>
-                            setData('pattern', event.target.value)
-                        }
-                        placeholder={
-                            data.match_type === 'prefix'
-                                ? 'e.g. TST* BLUE SUSHI'
-                                : 'e.g. /^STARBUCKS /i'
-                        }
+                        onChange={(event) => setData('pattern', event.target.value)}
+                        placeholder={data.match_type === 'prefix' ? 'e.g. TST* BLUE SUSHI' : 'e.g. /^STARBUCKS /i'}
                         className="h-8"
                     />
                     <Button
@@ -119,13 +103,7 @@ function RulesSection({ merchant }: { merchant: Merchant }) {
     );
 }
 
-function DefaultTagsSection({
-    merchant,
-    availableTags,
-}: {
-    merchant: Merchant;
-    availableTags: MerchantTag[];
-}) {
+function DefaultTagsSection({ merchant, availableTags }: { merchant: Merchant; availableTags: MerchantTag[] }) {
     const addTag = (name: string) => {
         router.post(
             MerchantDefaultTagController.store.url(merchant.id),
@@ -135,19 +113,18 @@ function DefaultTagsSection({
     };
 
     const removeTag = (slug: string) => {
-        router.delete(
-            MerchantDefaultTagController.destroy.url([merchant.id, slug]),
-            { preserveScroll: true, preserveState: true },
-        );
+        router.delete(MerchantDefaultTagController.destroy.url([merchant.id, slug]), {
+            preserveScroll: true,
+            preserveState: true,
+        });
     };
 
     return (
         <div className="grid gap-2 border-t border-sidebar-border/70 pt-4 dark:border-sidebar-border">
             <Label>Default tags</Label>
             <p className="text-xs text-muted-foreground">
-                Applied automatically to this merchant's transactions when they
-                are imported. Changing these does not affect existing
-                transactions.
+                Applied automatically to this merchant's transactions when they are imported. Changing these does not
+                affect existing transactions.
             </p>
             <TagEditor
                 tags={merchant.default_tags}
@@ -188,10 +165,7 @@ export function EditMerchantDialog({
     };
 
     const removeAlias = (aliasId: number) => {
-        router.delete(
-            MerchantAliasController.destroy.url([merchant.id, aliasId]),
-            { preserveScroll: true },
-        );
+        router.delete(MerchantAliasController.destroy.url([merchant.id, aliasId]), { preserveScroll: true });
     };
 
     return (
@@ -200,8 +174,7 @@ export function EditMerchantDialog({
                 <DialogHeader>
                     <DialogTitle>Edit merchant</DialogTitle>
                     <DialogDescription>
-                        Rename {merchant.name}, manage the aliases and rules
-                        that resolve to it.
+                        Rename {merchant.name}, manage the aliases and rules that resolve to it.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -219,10 +192,7 @@ export function EditMerchantDialog({
                                     id="edit-name"
                                     name="name"
                                     defaultValue={
-                                        merchant.confirmed
-                                            ? merchant.name
-                                            : (merchant.suggested_name ??
-                                              merchant.name)
+                                        merchant.confirmed ? merchant.name : (merchant.suggested_name ?? merchant.name)
                                     }
                                     autoFocus
                                 />
@@ -232,9 +202,7 @@ export function EditMerchantDialog({
                             <div className="grid gap-2 border-t border-sidebar-border/70 pt-4 dark:border-sidebar-border">
                                 <Label>Aliases</Label>
                                 {merchant.aliases.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">
-                                        No aliases yet.
-                                    </p>
+                                    <p className="text-sm text-muted-foreground">No aliases yet.</p>
                                 ) : (
                                     <ul className="grid gap-1">
                                         {merchant.aliases.map((alias) => (
@@ -248,9 +216,7 @@ export function EditMerchantDialog({
                                                     variant="ghost"
                                                     size="icon"
                                                     className="size-7 text-muted-foreground"
-                                                    onClick={() =>
-                                                        removeAlias(alias.id)
-                                                    }
+                                                    onClick={() => removeAlias(alias.id)}
                                                     aria-label={`Remove alias ${alias.name}`}
                                                 >
                                                     <X className="size-4" />
@@ -263,12 +229,7 @@ export function EditMerchantDialog({
                                     <div className="flex items-center gap-2">
                                         <Input
                                             value={data.name}
-                                            onChange={(event) =>
-                                                setData(
-                                                    'name',
-                                                    event.target.value,
-                                                )
-                                            }
+                                            onChange={(event) => setData('name', event.target.value)}
                                             placeholder="New alias"
                                             className="h-8"
                                         />
@@ -303,10 +264,7 @@ export function EditMerchantDialog({
 
                 <RulesSection merchant={merchant} />
 
-                <DefaultTagsSection
-                    merchant={merchant}
-                    availableTags={availableTags}
-                />
+                <DefaultTagsSection merchant={merchant} availableTags={availableTags} />
             </DialogContent>
         </Dialog>
     );
