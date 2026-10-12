@@ -1,11 +1,13 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { RefreshCw } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { deriveCategory } from '@/components/budgets/budget-shared';
 import { CategoryDetail } from '@/components/budgets/category-detail';
 import { CategoryRail } from '@/components/budgets/category-rail';
 import { EditBudgetDialog } from '@/components/budgets/edit-budget-dialog';
 import { TotalsBar } from '@/components/budgets/totals-bar';
-import { index as budgetsIndex } from '@/routes/budgets';
+import { Button } from '@/components/ui/button';
+import { index as budgetsIndex, recalculate } from '@/routes/budgets';
 import type { BudgetCategoryRow, BudgetsPageProps, SortMode } from '@/types';
 
 export default function Budgets({ currency, months, pacing, categories }: BudgetsPageProps) {
@@ -16,6 +18,19 @@ export default function Budgets({ currency, months, pacing, categories }: Budget
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [sortMode, setSortMode] = useState<SortMode>('budget');
     const [editing, setEditing] = useState<BudgetCategoryRow | null>(null);
+    const [recalculating, setRecalculating] = useState(false);
+
+    const recalculateBudgets = () => {
+        router.post(
+            recalculate(),
+            {},
+            {
+                preserveScroll: true,
+                onStart: () => setRecalculating(true),
+                onFinish: () => setRecalculating(false),
+            },
+        );
+    };
 
     const sorted = useMemo(() => {
         const list = [...derived];
@@ -59,9 +74,21 @@ export default function Budgets({ currency, months, pacing, categories }: Budget
             <Head title="Budgets" />
             <div className="flex h-[calc(100svh-4rem)] flex-col gap-5 overflow-hidden p-4">
                 <header className="grid items-center gap-x-8 gap-y-4 lg:grid-cols-[33%_1fr]">
-                    <div>
-                        <h1 className="text-xl font-semibold tracking-tight">Budgets</h1>
-                        <p className="text-sm text-muted-foreground">{period.label}</p>
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <h1 className="text-xl font-semibold tracking-tight">Budgets</h1>
+                            <p className="text-sm text-muted-foreground">{period.label}</p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={recalculating || derived.length === 0}
+                            onClick={recalculateBudgets}
+                            title="Reset every budget to its monthly average spend"
+                        >
+                            <RefreshCw className={recalculating ? 'animate-spin' : undefined} />
+                            Recalculate
+                        </Button>
                     </div>
 
                     <div>{totals.budgeted > 0 && <TotalsBar totals={totals} currency={currency} />}</div>

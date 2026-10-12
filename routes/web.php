@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\Budgets\BudgetRecalculationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InsightsController;
 use App\Http\Controllers\Merchants\MerchantAliasController;
@@ -32,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('budgets', [BudgetController::class, 'index'])->name('budgets.index');
     Route::patch('budgets', [BudgetController::class, 'update'])->name('budgets.update');
+    Route::post('budgets/recalculate', [BudgetRecalculationController::class, 'store'])->name('budgets.recalculate');
 
     Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::post('transactions/import', [ImportController::class, 'store'])->name('transactions.import');
